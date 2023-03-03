@@ -1,27 +1,105 @@
 #include "tinyxml2.h"
 #include <string>
 #include <iostream>
-#include "structs.h"
 #include <vector>
+#include "classes.h"
 
 
-//std::string xml_path;
-
-float width, height = 0;
-Camera cameraData;
-std::vector<Model> models;
+Scene scene;
 
 
-int readXML(std::string file){
+void readGroupXML(tinyxml2::XMLElement *group){
+    using namespace tinyxml2;
+
+    while(group){    
+
+        //TRANSFORM
+        XMLElement *transformXML = group->FirstChildElement("transform");
+        XMLElement *elem = transformXML->FirstChildElement();
+        while(elem){
+            std::string name = std::string(elem->Name());
+
+            if(name == "translate"){
+                float x, y, z;
+                x = atof(elem->Attribute("x"));
+                y = atof(elem->Attribute("y"));
+                z = atof(elem->Attribute("z"));
+
+                scene.transformations.push_back(new Translate(x, y, z));
+
+            }else if(name == "rotate"){
+                float angle, x, y, z;
+                x = atof(elem->Attribute("x"));
+                y = atof(elem->Attribute("y"));
+                z = atof(elem->Attribute("z"));
+                angle = atof(elem->Attribute("angle"));
+
+                scene.transformations.push_back(new Rotate(angle, x, y, z));
+
+            }else if(name == "scale"){
+                float x, y, z;
+                x = atof(elem->Attribute("x"));
+                y = atof(elem->Attribute("y"));
+                z = atof(elem->Attribute("z"));
+
+                scene.transformations.push_back(new Scale(x, y, z));
+            }
+
+            elem = elem->NextSiblingElement();
+        }
+
+        //MODELS
+        XMLElement *modelsXML = group->FirstChildElement("models");
+
+        if (modelsXML){
+            XMLElement *modelXML = modelsXML->FirstChildElement("model");
+            while(modelXML){
+                Model model;
+                model.model_file = modelXML->Attribute("file");
+                XMLElement *texture = modelXML->FirstChildElement("texture");
+                model.texture_file = texture->Attribute("file");
+
+                XMLElement *color = modelXML->FirstChildElement("color");
+                if(color){
+                    model.diffuse.r = atof(color->FirstChildElement("diffuse")->Attribute("R"));
+                    model.diffuse.g = atof(color->FirstChildElement("diffuse")->Attribute("G"));
+                    model.diffuse.b = atof(color->FirstChildElement("diffuse")->Attribute("B"));
+                    model.ambient.r = atof(color->FirstChildElement("ambient")->Attribute("R"));
+                    model.ambient.g = atof(color->FirstChildElement("ambient")->Attribute("G"));
+                    model.ambient.b = atof(color->FirstChildElement("ambient")->Attribute("B"));
+                    model.specular.r = atof(color->FirstChildElement("specular")->Attribute("R"));
+                    model.specular.g = atof(color->FirstChildElement("specular")->Attribute("G"));
+                    model.specular.b = atof(color->FirstChildElement("specular")->Attribute("B"));
+                    model.emissive.r = atof(color->FirstChildElement("emissive")->Attribute("R"));
+                    model.emissive.g = atof(color->FirstChildElement("emissive")->Attribute("G"));
+                    model.emissive.b = atof(color->FirstChildElement("emissive")->Attribute("B"));
+                    model.shininess = atof(color->FirstChildElement("shininess")->Attribute("value"));
+                }
+
+                scene.models.push_back(model);
+
+                modelXML = modelXML->NextSiblingElement("model");
+            }
+        }
+        
+        readGroupXML(group->FirstChildElement("group"));
+        group = group->NextSiblingElement("group");
+    }
+}
+
+
+void readXML(std::string file){
     using namespace tinyxml2;
 
     XMLDocument doc;
     doc.LoadFile(file.data());
 
+    //WINDOW XML READING
     XMLElement *window = doc.FirstChildElement("world")->FirstChildElement("window");
-    width = atof(window->Attribute("width"));
-    height = atof(window->Attribute("height"));
+    scene.width = atof(window->Attribute("width"));
+    scene.height = atof(window->Attribute("height"));
 
+    //CAMERA XML READING
     XMLElement *camera = doc.FirstChildElement("world")->FirstChildElement("camera");
     
     XMLElement *position = camera->FirstChildElement("position");
@@ -50,82 +128,51 @@ int readXML(std::string file){
         projection.far = atof(projectionXML->Attribute("far"));
     }
 
+    Camera cameraData;
     cameraData.position = pos;
     cameraData.lookAt = look;
     cameraData.up = up;
     cameraData.projection = projection;
 
-    XMLElement *lights = doc.FirstChildElement("world")->FirstChildElement("lights");
-    XMLElement *light = lights->FirstChildElement("light");
+    scene.camera = cameraData;
 
-    while(light){
-        Light lightObj;
-        lightObj.type = light->Attribute("type");
+    //LIGHTS
+    XMLElement *lightsXML = doc.FirstChildElement("world")->FirstChildElement("lights");
+    XMLElement *lightXML = lightsXML->FirstChildElement("light");
 
-        if (light->Attribute("posX")){
-            lightObj.posX = atof(light->Attribute("posX"));
+    while(lightXML){
+        Light light;
+        light.type = lightXML->Attribute("type");
+
+        if (lightXML->Attribute("posX")){
+            light.posX = atof(lightXML->Attribute("posX"));
         }
-        if (light->Attribute("posY")){
-            lightObj.posY = atof(light->Attribute("posY"));
+        if (lightXML->Attribute("posY")){
+            light.posY = atof(lightXML->Attribute("posY"));
         }
-        if (light->Attribute("posZ")){
-            lightObj.posZ = atof(light->Attribute("posZ"));
+        if (lightXML->Attribute("posZ")){
+            light.posZ = atof(lightXML->Attribute("posZ"));
         }
-        if (light->Attribute("dirX")){
-            lightObj.dirX = atof(light->Attribute("dirX"));
+        if (lightXML->Attribute("dirX")){
+            light.dirX = atof(lightXML->Attribute("dirX"));
         }
-        if (light->Attribute("dirY")){
-            lightObj.dirY = atof(light->Attribute("dirY"));
+        if (lightXML->Attribute("dirY")){
+            light.dirY = atof(lightXML->Attribute("dirY"));
         }
-        if (light->Attribute("dirZ")){
-            lightObj.dirZ = atof(light->Attribute("dirZ"));
+        if (lightXML->Attribute("dirZ")){
+            light.dirZ = atof(lightXML->Attribute("dirZ"));
         }
-        if (light->Attribute("cutoff")){
-            lightObj.cutoff = atof(light->Attribute("cutoff"));
+        if (lightXML->Attribute("cutoff")){
+            light.cutoff = atof(lightXML->Attribute("cutoff"));
         }
 
-        light = light->NextSiblingElement("light");
+        scene.lights.push_back(light);
+        lightXML = lightXML->NextSiblingElement("light");
     }
 
-    XMLElement *modelsXML = doc.FirstChildElement("world")->FirstChildElement("group")->FirstChildElement("models");
-    if (modelsXML){
-        XMLElement *modelXML = modelsXML->FirstChildElement("model");
-        while(modelXML){
-            Model model;
-            XMLElement *texture = modelXML->FirstChildElement("texture");
-            model.texture = texture->Attribute("file");
-
-            XMLElement *color = modelXML->FirstChildElement("color");
-            if(color){
-                model.diffuse.r = atof(color->FirstChildElement("diffuse")->Attribute("R"));
-                model.diffuse.g = atof(color->FirstChildElement("diffuse")->Attribute("G"));
-                model.diffuse.b = atof(color->FirstChildElement("diffuse")->Attribute("B"));
-                model.ambient.r = atof(color->FirstChildElement("ambient")->Attribute("R"));
-                model.ambient.g = atof(color->FirstChildElement("ambient")->Attribute("G"));
-                model.ambient.b = atof(color->FirstChildElement("ambient")->Attribute("B"));
-                model.specular.r = atof(color->FirstChildElement("specular")->Attribute("R"));
-                model.specular.g = atof(color->FirstChildElement("specular")->Attribute("G"));
-                model.specular.b = atof(color->FirstChildElement("specular")->Attribute("B"));
-                model.emissive.r = atof(color->FirstChildElement("emissive")->Attribute("R"));
-                model.emissive.g = atof(color->FirstChildElement("emissive")->Attribute("G"));
-                model.emissive.b = atof(color->FirstChildElement("emissive")->Attribute("B"));
-                model.shininess = atof(color->FirstChildElement("shininess")->Attribute("value"));
-            }
-
-            models.push_back(model);
-
-            modelXML = modelXML->NextSiblingElement("model");
-        }
-    }
-
-    /*while(group){
-
-
-
-        group = group->NextSiblingElement("group");
-    }*/
-
-    return 0;
+    //GROUP XML READING
+    XMLElement *group = doc.FirstChildElement("world")->FirstChildElement("group");
+    readGroupXML(group);
 }
 
 
@@ -140,7 +187,7 @@ int main(int argc, char **argv){
         readXML(xml_path + argv[1]);
     }
 
-    printf("%f\n", models[0].diffuse.r);
+    printf("%f\n", scene.models[0].diffuse.r);
 
     return 0;
 }
