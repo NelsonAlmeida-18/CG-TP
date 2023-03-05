@@ -1,3 +1,9 @@
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#else
+#include <GL/glut.h>
+#endif
+
 #include "tinyxml2.h"
 #include <string>
 #include <iostream>
@@ -176,6 +182,46 @@ void readXML(std::string file){
 }
 
 
+void changeSize(int w, int h) {
+    // Prevent a divide by zero, when window is too short
+    // (you cant make a window with zero width).
+    if(h == 0)
+        h = 1;
+
+    // compute window's aspect ratio
+    float ratio = w * 1.0 / h;
+
+    // Set the projection matrix as current
+    glMatrixMode(GL_PROJECTION);
+    // Load Identity Matrix
+    glLoadIdentity();
+
+    // Set the viewport to be the entire window
+    glViewport(0, 0, w, h);
+
+    // Set perspective
+    gluPerspective(scene.camera.projection.fov, ratio, scene.camera.projection.near, scene.camera.projection.far);
+
+    // return to the model view matrix mode
+    glMatrixMode(GL_MODELVIEW);
+}
+
+
+void renderScene(){
+    //clear buffers
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
+    //set the camera
+    glLoadIdentity();
+    gluLookAt(scene.camera.position.x, scene.camera.position.y, scene.camera.position.z,
+              scene.camera.lookAt.x, scene.camera.lookAt.y, scene.camera.lookAt.z,
+              scene.camera.up.x, scene.camera.up.y, scene.camera.up.z);
+
+    //end of frame
+    glutSwapBuffers();
+}
+
+
 std::string xml_path;
 
 int main(int argc, char **argv){
@@ -187,7 +233,24 @@ int main(int argc, char **argv){
         readXML(xml_path + argv[1]);
     }
 
-    printf("%f\n", scene.models[0].diffuse.r);
+    //init GLUT and window
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DEPTH|GLUT_DOUBLE|GLUT_RGBA);
+    glutInitWindowPosition(0, 0);
+    glutInitWindowSize(800, 800);
+    glutCreateWindow("Project");
+
+    //Required callback registry
+    glutDisplayFunc(renderScene);
+    glutReshapeFunc(changeSize);
+
+
+    //OpenGL settings
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+
+    //GLUT main cycle
+    glutMainLoop();
 
     return 0;
 }
