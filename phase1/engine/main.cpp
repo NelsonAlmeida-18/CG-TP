@@ -189,17 +189,20 @@ void drawAxes(){
 
     glBegin(GL_LINES);
 
+    float windowWidth = glutGet(GLUT_WINDOW_WIDTH)/2;
+    float windowHeight = glutGet(GLUT_WINDOW_HEIGHT)/2;
+
     glColor3f(1,0,0);
-    glVertex3f(1, 0, 0);
-    glVertex3f(-1, 0, 1);
+    glVertex3f(windowWidth, 0, 0);
+    glVertex3f(-windowWidth, 0, 0);
 
     glColor3f(0, 1, 0);
-    glVertex3f(0, 1, 0);
-    glVertex3f(0, -1, 0);
+    glVertex3f(0, windowHeight, 0);
+    glVertex3f(0, -windowHeight, 0);
 
     glColor3f(0, 0, 1);
-    glVertex3f(0, 0, 1);
-    glVertex3f(0, 0, -1);
+    glVertex3f(0, 0, windowWidth);
+    glVertex3f(0, 0, -windowWidth);
 
     glEnd();
 }
