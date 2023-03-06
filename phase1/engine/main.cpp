@@ -7,8 +7,11 @@
 #include "tinyxml2.h"
 #include <string>
 #include <iostream>
+#include <fstream>
+#include <stdio.h>
 #include <vector>
 #include "classes.h"
+#include <array>
 
 
 Scene scene;
@@ -94,11 +97,11 @@ void readGroupXML(tinyxml2::XMLElement *group){
 }
 
 
-void readXML(std::string file){
+void readXML(char* filename){
     using namespace tinyxml2;
 
     XMLDocument doc;
-    doc.LoadFile(file.data());
+    doc.LoadFile(filename);
 
     //WINDOW XML READING
     XMLElement *window = doc.FirstChildElement("world")->FirstChildElement("window");
@@ -182,6 +185,26 @@ void readXML(std::string file){
 }
 
 
+void drawAxes(){
+
+    glBegin(GL_LINES);
+
+    glColor3f(1,0,0);
+    glVertex3f(1, 0, 0);
+    glVertex3f(-1, 0, 1);
+
+    glColor3f(0, 1, 0);
+    glVertex3f(0, 1, 0);
+    glVertex3f(0, -1, 0);
+
+    glColor3f(0, 0, 1);
+    glVertex3f(0, 0, 1);
+    glVertex3f(0, 0, -1);
+
+    glEnd();
+}
+
+
 void changeSize(int w, int h) {
     // Prevent a divide by zero, when window is too short
     // (you cant make a window with zero width).
@@ -217,20 +240,25 @@ void renderScene(){
               scene.camera.lookAt.x, scene.camera.lookAt.y, scene.camera.lookAt.z,
               scene.camera.up.x, scene.camera.up.y, scene.camera.up.z);
 
+    //draw objects
+    drawAxes();
+
     //end of frame
     glutSwapBuffers();
 }
 
 
-std::string xml_path;
+char path[50];
 
 int main(int argc, char **argv){
 
-    //xml_path = "../xml/";
-    xml_path = "";
+    strcpy(path, "../../xml/");
 
     if(argc > 1){
-        readXML(xml_path + argv[1]);
+        strcat(path, argv[1]);
+        readXML(path);
+    }else{
+        return 1;
     }
 
     //init GLUT and window
