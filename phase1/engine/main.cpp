@@ -12,6 +12,7 @@
 #include <vector>
 #include "classes.h"
 #include <array>
+#include <cstring>
 
 
 Scene scene;
@@ -185,6 +186,43 @@ void readXML(char* filename){
 }
 
 
+void tokenize(std::string const &str, const char* delim, std::vector<float> &out){ 
+
+    char *token = strtok(const_cast<char*>(str.c_str()), delim); 
+    while (token != nullptr){ 
+        out.push_back(atof(token)); 
+        token = strtok(nullptr, delim); 
+    }
+} 
+
+
+void drawFigure(std::string filename){
+    std::string str;
+    std::ifstream file3d(filename);
+    getline(file3d, str);
+    str = "";
+    const char* delim = " ";
+    
+    while(getline(file3d, str)){
+        std::vector<float> out;
+        tokenize(str, delim, out);
+        glVertex3f(out[0], out[1], out[2]);
+        str = "";
+    }
+}
+
+
+void drawModels(){
+
+    int size = scene.models.size();
+    for(int i = 0; i < size; i++){
+        glBegin(GL_TRIANGLES);
+        drawFigure(scene.models[i].model_file);
+        glEnd();
+    }
+}
+
+
 void drawAxes(){
 
     glBegin(GL_LINES);
@@ -244,7 +282,10 @@ void renderScene(){
               scene.camera.up.x, scene.camera.up.y, scene.camera.up.z);
 
     //draw objects
+    glPolygonMode(GL_FRONT,GL_LINE);
+    
     drawAxes();
+    drawModels();
 
     //end of frame
     glutSwapBuffers();
