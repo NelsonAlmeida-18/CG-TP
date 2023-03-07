@@ -1,7 +1,0 @@
-[
-{
-  "directory": "/Users/rkeat/Desktop/Universidade/3ano2semestre/CG-TP/phase1/generator/build",
-  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ -g -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.1.sdk -o CMakeFiles/generator.dir/main.cpp.o -c /Users/rkeat/Desktop/Universidade/3ano2semestre/CG-TP/phase1/generator/main.cpp",
-  "file": "/Users/rkeat/Desktop/Universidade/3ano2semestre/CG-TP/phase1/generator/main.cpp"
-}
-]
