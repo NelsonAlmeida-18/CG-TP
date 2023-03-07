@@ -43,7 +43,7 @@ void generatePlane(float length, int divisions){
     int numOfTriangs = (divisions*divisions*2)*2;
     int numOfPoints = numOfTriangs*3;
     //write number of points 
-    buffer << numOfPoints << '\n';
+    //buffer << numOfPoints << '\n';
 
     point point1;
     point point2;
@@ -85,6 +85,7 @@ void generatePlane(float length, int divisions){
 }
 
 void generateBox(float length, int divisions) {
+    printf("Generating Box");
     float edgeIncrement = length / divisions;
     float initX = length / 2;
     float initY = length / 2;
@@ -217,7 +218,7 @@ void generateBox(float length, int divisions) {
 
 
 void generateCone(float radius, float height, int slices, int stacks) {
-
+    printf("Generating Cone");
     float angleStep = (2*M_PI)/slices;
     float heightStep = height / stacks;
     
@@ -262,43 +263,83 @@ void generateCone(float radius, float height, int slices, int stacks) {
 }
 
 void generateSphere(float radius, int slices, int stacks){
+    printf("Generating Sphere");
+    float angleFace = M_PI/(2*stacks);
+    float angleBase = 2*M_PI/slices;
+    
+    
+    point point1;
+    point point2;
+    point point3;
+    point point4;
 
+
+    for (int i=0;i<slices;i++){
+        for(int j=0;j<stacks;j++){
+            point1.setPoint(radius*cos(i*angleBase)*cos((j+1)*angleFace), radius*sin((j+1)*angleFace), radius*sin(i*angleBase)*cos((j+1)*angleFace));
+            
+            point2.setPoint(radius*cos(i*angleBase)*cos(j*angleFace), radius*sin(j*angleFace), radius*sin(i*angleBase)*cos(j*angleFace));
+            
+            point3.setPoint(radius*cos((i+1)*angleBase)*cos(j*angleFace), radius*sin(j*angleFace), radius*sin((i+1)*angleBase)*cos(j*angleFace));
+            
+            buffer << point2.pointCoords() << '\n';
+            buffer << point1.pointCoords() << '\n';
+            buffer << point3.pointCoords() << '\n';
+        }
+    }
+    
+    for (int i=0;i<slices;i++){
+        for(int j=0;j<stacks;j++){
+            point1.setPoint(radius*cos(i*angleBase)*cos((j+1)*angleFace), -radius*sin((j+1)*angleFace), radius*sin(i*angleBase)*cos((j+1)*angleFace));
+            
+            point2.setPoint(radius*cos(i*angleBase)*cos(j*angleFace), -radius*sin(j*angleFace), radius*sin(i*angleBase)*cos(j*angleFace));
+            
+            point3.setPoint(radius*cos((i+1)*angleBase)*cos(j*angleFace), -radius*sin(j*angleFace), radius*sin((i+1)*angleBase)*cos(j*angleFace));
+            
+            buffer << point1.pointCoords() << '\n';
+            buffer << point2.pointCoords() << '\n';
+            buffer << point3.pointCoords() << '\n';
+        }
+    }
 }
 
 
 int main(int argc, char **argv){
     ofstream file;
-    
+    char* filepath;
+
     try{
-       file.open(argv[4]);
-
-        if(!file){
-            std::cout << ("\nUnable to open file\n\0");
-            return 1;
-        }
-
         if (strcmp(argv[1], "plane")==0){
             generatePlane(std::stof(argv[2]), std::atoi(argv[3]));
+            filepath=argv[4];
         }
         
         if (strcmp(argv[1], "box")==0){
             generateBox(std::stof(argv[2]), std::atoi(argv[3]));
+            filepath=argv[4];
         
         }
 
         if (strcmp(argv[1], "sphere")==0){
             generateSphere(std::stof(argv[2]), std::atoi(argv[3]),std::atoi(argv[4]));
+            filepath=argv[5];
         }
 
         if (strcmp(argv[1], "cone")==0){
             generateCone(std::stof(argv[2]), std::stof(argv[3]),std::atoi(argv[4]),std::atoi(argv[5]));
+            filepath=argv[6];
         }
-
     }
-
-    //melhorar este catch pois pode ser por argumentos a mais
     catch(...){
         std::cout << "\0Not enough arguments\n\0";
+        return 1;
+    }
+
+    try{
+        file.open(filepath);
+    }
+    catch(...){
+        std::cout << "\0Cannot open file\n\0";
         return 1;
     }
 
@@ -306,6 +347,5 @@ int main(int argc, char **argv){
     file.close();
 
     std::cout << "\nDone\n\0";
-
     return 0;
 }
