@@ -43,7 +43,7 @@ void generatePlane(float length, int divisions){
     int numOfTriangs = (divisions*divisions*2)*2;
     int numOfPoints = numOfTriangs*3;
     //write number of points 
-    buffer << numOfPoints << '\n';
+    //buffer << numOfPoints << '\n';
 
     point point1;
     point point2;

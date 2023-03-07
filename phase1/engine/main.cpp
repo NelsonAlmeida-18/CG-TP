@@ -199,15 +199,25 @@ void tokenize(std::string const &str, const char* delim, std::vector<float> &out
 void drawFigure(std::string filename){
     std::string str;
     std::ifstream file3d(filename);
-    getline(file3d, str);
-    str = "";
+
     const char* delim = " ";
-    
-    while(getline(file3d, str)){
-        std::vector<float> out;
-        tokenize(str, delim, out);
-        glVertex3f(out[0], out[1], out[2]);
-        str = "";
+    if (file3d.is_open()){
+        glBegin(GL_TRIANGLES);
+        while(getline(file3d, str)){
+            std::cout << str;
+            
+            std::vector<float> out;
+            tokenize(str, delim, out);
+            
+            glVertex3f(out[0], out[1], out[2]);
+            
+            str = "";
+        }
+        glEnd();
+        file3d.close();
+    }
+    else{
+        std::cout << "Could not open file: " << filename << "\n\0";
     }
 }
 
@@ -223,7 +233,7 @@ void drawModels(){
 }
 
 
-void drawAxes(){
+void drawAxis(){
 
     glBegin(GL_LINES);
 
@@ -284,7 +294,7 @@ void renderScene(){
     //draw objects
     glPolygonMode(GL_FRONT,GL_LINE);
     
-    drawAxes();
+    drawAxis();
     drawModels();
 
     //end of frame
@@ -320,6 +330,7 @@ int main(int argc, char **argv){
     //OpenGL settings
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 
     //GLUT main cycle
     glutMainLoop();
