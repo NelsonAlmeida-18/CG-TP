@@ -280,6 +280,41 @@ void changeSize(int w, int h) {
     glMatrixMode(GL_MODELVIEW);
 }
 
+float pitchAngle=0;
+float yawAngle=0;
+int initialMouseX=-1;
+int initialMouseY=-1;
+// 100% screen width = rotação de 360 graus
+
+void spinRoutine(int x, int y){
+    float windowWidth = glutGet(GLUT_WINDOW_WIDTH);
+    float windowHeight = glutGet(GLUT_WINDOW_HEIGHT);
+    
+    float operationX =(x-initialMouseX)*360/windowWidth;
+    float operationY =(y-initialMouseY)*360/windowHeight;
+    yawAngle+=operationX;
+    pitchAngle+=operationY;
+    glutPostRedisplay();
+    initialMouseX=x;
+    initialMouseY=y;
+}
+
+void youSpinMyHead(int button, int state, int x, int y){
+
+    
+    if (button==GLUT_LEFT_BUTTON){
+        initialMouseX=x;
+        initialMouseY=y;
+        glutMotionFunc(spinRoutine);
+    }
+    
+    if (cameraLookingX==-1){
+        cameraLookingX=x;
+        cameraLookingY=y;
+    }
+}
+
+
 
 void renderScene(){
     //clear buffers
@@ -295,6 +330,10 @@ void renderScene(){
     glPolygonMode(GL_FRONT,GL_LINE);
     
     drawAxis();
+
+    glRotatef(yawAngle, 0, 1, 0);
+    glRotatef(pitchAngle,1,0,0);
+
     drawModels();
 
     //end of frame
@@ -325,7 +364,7 @@ int main(int argc, char **argv){
     //Required callback registry
     glutDisplayFunc(renderScene);
     glutReshapeFunc(changeSize);
-
+    glutMouseFunc(youSpinMyHead);
 
     //OpenGL settings
     glEnable(GL_DEPTH_TEST);
