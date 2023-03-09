@@ -25,37 +25,39 @@ void readGroupXML(tinyxml2::XMLElement *group){
 
         //TRANSFORM
         XMLElement *transformXML = group->FirstChildElement("transform");
-        XMLElement *elem = transformXML->FirstChildElement();
-        while(elem){
-            std::string name = std::string(elem->Name());
+        if(transformXML){
+            XMLElement *elem = transformXML->FirstChildElement();
+            while(elem){
+                std::string name = std::string(elem->Name());
 
-            if(name == "translate"){
-                float x, y, z;
-                x = atof(elem->Attribute("x"));
-                y = atof(elem->Attribute("y"));
-                z = atof(elem->Attribute("z"));
+                if(name == "translate"){
+                    float x, y, z;
+                    x = atof(elem->Attribute("x"));
+                    y = atof(elem->Attribute("y"));
+                    z = atof(elem->Attribute("z"));
 
-                scene.transformations.push_back(new Translate(x, y, z));
+                    scene.transformations.push_back(new Translate(x, y, z));
 
-            }else if(name == "rotate"){
-                float angle, x, y, z;
-                x = atof(elem->Attribute("x"));
-                y = atof(elem->Attribute("y"));
-                z = atof(elem->Attribute("z"));
-                angle = atof(elem->Attribute("angle"));
+                }else if(name == "rotate"){
+                    float angle, x, y, z;
+                    x = atof(elem->Attribute("x"));
+                    y = atof(elem->Attribute("y"));
+                    z = atof(elem->Attribute("z"));
+                    angle = atof(elem->Attribute("angle"));
 
-                scene.transformations.push_back(new Rotate(angle, x, y, z));
+                    scene.transformations.push_back(new Rotate(angle, x, y, z));
 
-            }else if(name == "scale"){
-                float x, y, z;
-                x = atof(elem->Attribute("x"));
-                y = atof(elem->Attribute("y"));
-                z = atof(elem->Attribute("z"));
+                }else if(name == "scale"){
+                    float x, y, z;
+                    x = atof(elem->Attribute("x"));
+                    y = atof(elem->Attribute("y"));
+                    z = atof(elem->Attribute("z"));
 
-                scene.transformations.push_back(new Scale(x, y, z));
+                    scene.transformations.push_back(new Scale(x, y, z));
+                }
+
+                elem = elem->NextSiblingElement();
             }
-
-            elem = elem->NextSiblingElement();
         }
 
         //MODELS
@@ -67,7 +69,9 @@ void readGroupXML(tinyxml2::XMLElement *group){
                 Model model;
                 model.model_file = modelXML->Attribute("file");
                 XMLElement *texture = modelXML->FirstChildElement("texture");
-                model.texture_file = texture->Attribute("file");
+                if(texture){
+                    model.texture_file = texture->Attribute("file");
+                }
 
                 XMLElement *color = modelXML->FirstChildElement("color");
                 if(color){
@@ -148,36 +152,37 @@ void readXML(char* filename){
 
     //LIGHTS
     XMLElement *lightsXML = doc.FirstChildElement("world")->FirstChildElement("lights");
-    XMLElement *lightXML = lightsXML->FirstChildElement("light");
+    if(lightsXML){
+        XMLElement *lightXML = lightsXML->FirstChildElement("light");
+        while(lightXML){
+            Light light;
+            light.type = lightXML->Attribute("type");
 
-    while(lightXML){
-        Light light;
-        light.type = lightXML->Attribute("type");
+            if (lightXML->Attribute("posX")){
+                light.posX = atof(lightXML->Attribute("posX"));
+            }
+            if (lightXML->Attribute("posY")){
+                light.posY = atof(lightXML->Attribute("posY"));
+            }
+            if (lightXML->Attribute("posZ")){
+                light.posZ = atof(lightXML->Attribute("posZ"));
+            }
+            if (lightXML->Attribute("dirX")){
+                light.dirX = atof(lightXML->Attribute("dirX"));
+            }
+            if (lightXML->Attribute("dirY")){
+                light.dirY = atof(lightXML->Attribute("dirY"));
+            }
+            if (lightXML->Attribute("dirZ")){
+                light.dirZ = atof(lightXML->Attribute("dirZ"));
+            }
+            if (lightXML->Attribute("cutoff")){
+                light.cutoff = atof(lightXML->Attribute("cutoff"));
+            }
 
-        if (lightXML->Attribute("posX")){
-            light.posX = atof(lightXML->Attribute("posX"));
+            scene.lights.push_back(light);
+            lightXML = lightXML->NextSiblingElement("light");
         }
-        if (lightXML->Attribute("posY")){
-            light.posY = atof(lightXML->Attribute("posY"));
-        }
-        if (lightXML->Attribute("posZ")){
-            light.posZ = atof(lightXML->Attribute("posZ"));
-        }
-        if (lightXML->Attribute("dirX")){
-            light.dirX = atof(lightXML->Attribute("dirX"));
-        }
-        if (lightXML->Attribute("dirY")){
-            light.dirY = atof(lightXML->Attribute("dirY"));
-        }
-        if (lightXML->Attribute("dirZ")){
-            light.dirZ = atof(lightXML->Attribute("dirZ"));
-        }
-        if (lightXML->Attribute("cutoff")){
-            light.cutoff = atof(lightXML->Attribute("cutoff"));
-        }
-
-        scene.lights.push_back(light);
-        lightXML = lightXML->NextSiblingElement("light");
     }
 
     //GROUP XML READING
@@ -204,8 +209,6 @@ void drawFigure(std::string filename){
     if (file3d.is_open()){
         glBegin(GL_TRIANGLES);
         while(getline(file3d, str)){
-            std::cout << str;
-            
             std::vector<float> out;
             tokenize(str, delim, out);
             
