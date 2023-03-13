@@ -287,6 +287,7 @@ float pitchAngle=0;
 float yawAngle=0;
 int initialMouseX=-1;
 int initialMouseY=-1;
+float cameraLookingX, cameraLookingY;
 // 100% screen width = rotação de 360 graus
 
 void spinRoutine(int x, int y){
