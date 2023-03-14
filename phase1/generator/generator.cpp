@@ -43,7 +43,7 @@ void generatePlane(float length, int divisions){
     int numOfTriangs = (divisions*divisions*2)*2;
     int numOfPoints = numOfTriangs*3;
     //write number of points 
-    //buffer << numOfPoints << '\n';
+    buffer << numOfPoints << '\n';
 
     point point1;
     point point2;
@@ -92,6 +92,10 @@ void generateBox(float length, int divisions) {
     float initZ = length / 2;
     int numOfTriangs = 6 * divisions * divisions * 2;
     int numOfPoints = numOfTriangs * 3;
+    
+    buffer << numOfPoints << '\n';
+
+    
 
     point point1;
     point point2;
@@ -222,6 +226,10 @@ void generateCone(float radius, float height, int slices, int stacks) {
     float angleStep = (2*M_PI)/slices;
     float heightStep = height / stacks;
     
+    //numOfPoints = (numOfBaseTriangs+2*stacks*slices)*3
+    int numOfPoints = (slices+2*stacks*slices)*3;
+    buffer << numOfPoints << '\n';
+
     point point1;
     //point1 = origem
     point1.setPoint(0,0,0);
@@ -266,7 +274,10 @@ void generateSphere(float radius, int slices, int stacks){
     printf("Generating Sphere");
     float angleFace = M_PI/(2*stacks);
     float angleBase = 2*M_PI/slices;
-    
+
+    int numOfPoints = (slices+2*stacks*slices)*3;
+
+    buffer << numOfPoints << '\n';
     
     point point1;
     point point2;
