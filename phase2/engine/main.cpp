@@ -18,15 +18,18 @@
 Scene scene;
 
 
-void readGroupXML(tinyxml2::XMLElement *group){
+void readSubgroupsXML(tinyxml2::XMLElement *subgroupXML, std::vector<Group> &subgroups){
     using namespace tinyxml2;
 
-    while(group){    
+    std::vector<Group> temp_subgroups;
 
+    while(subgroupXML){
+        Group subgroup;
         //TRANSFORM
-        XMLElement *transformXML = group->FirstChildElement("transform");
+        XMLElement *transformXML = subgroupXML->FirstChildElement("transform");
         if(transformXML){
             XMLElement *elem = transformXML->FirstChildElement();
+            std::vector<Transform*> transf;
             while(elem){
                 std::string name = std::string(elem->Name());
 
@@ -36,7 +39,7 @@ void readGroupXML(tinyxml2::XMLElement *group){
                     y = atof(elem->Attribute("y"));
                     z = atof(elem->Attribute("z"));
 
-                    scene.transformations.push_back(new Translate(x, y, z));
+                    transf.push_back(new Translate(x, y, z));
 
                 }else if(name == "rotate"){
                     float angle, x, y, z;
@@ -45,7 +48,7 @@ void readGroupXML(tinyxml2::XMLElement *group){
                     z = atof(elem->Attribute("z"));
                     angle = atof(elem->Attribute("angle"));
 
-                    scene.transformations.push_back(new Rotate(angle, x, y, z));
+                    transf.push_back(new Rotate(angle, x, y, z));
 
                 }else if(name == "scale"){
                     float x, y, z;
@@ -53,15 +56,17 @@ void readGroupXML(tinyxml2::XMLElement *group){
                     y = atof(elem->Attribute("y"));
                     z = atof(elem->Attribute("z"));
 
-                    scene.transformations.push_back(new Scale(x, y, z));
+                    transf.push_back(new Scale(x, y, z));
                 }
 
                 elem = elem->NextSiblingElement();
             }
+
+            subgroup.transformations = transf;
         }
 
         //MODELS
-        XMLElement *modelsXML = group->FirstChildElement("models");
+        XMLElement *modelsXML = subgroupXML->FirstChildElement("models");
 
         if (modelsXML){
             XMLElement *modelXML = modelsXML->FirstChildElement("model");
@@ -90,15 +95,107 @@ void readGroupXML(tinyxml2::XMLElement *group){
                     model.shininess = atof(color->FirstChildElement("shininess")->Attribute("value"));
                 }
 
-                scene.models.push_back(model);
-
+                subgroup.models.push_back(model);
                 modelXML = modelXML->NextSiblingElement("model");
             }
         }
         
-        readGroupXML(group->FirstChildElement("group"));
-        group = group->NextSiblingElement("group");
+        if(subgroupXML->FirstChildElement("group")){
+            readSubgroupsXML(subgroupXML->FirstChildElement("group"), subgroup.subgroups);
+        }
+        
+        subgroupXML = subgroupXML->NextSiblingElement("group");
+
+        temp_subgroups.push_back(subgroup);
     }
+
+    subgroups = temp_subgroups;
+}
+
+
+void readGroupXML(tinyxml2::XMLElement *groupXML){
+    using namespace tinyxml2;
+
+    Group group;
+    //TRANSFORM
+    XMLElement *transformXML = groupXML->FirstChildElement("transform");
+    if(transformXML){
+        XMLElement *elem = transformXML->FirstChildElement();
+        while(elem){
+            std::string name = std::string(elem->Name());
+
+            if(name == "translate"){
+                float x, y, z;
+                x = atof(elem->Attribute("x"));
+                y = atof(elem->Attribute("y"));
+                z = atof(elem->Attribute("z"));
+
+                group.transformations.push_back(new Translate(x, y, z));
+
+            }else if(name == "rotate"){
+                float angle, x, y, z;
+                x = atof(elem->Attribute("x"));
+                y = atof(elem->Attribute("y"));
+                z = atof(elem->Attribute("z"));
+                angle = atof(elem->Attribute("angle"));
+
+                group.transformations.push_back(new Rotate(angle, x, y, z));
+
+            }else if(name == "scale"){
+                float x, y, z;
+                x = atof(elem->Attribute("x"));
+                y = atof(elem->Attribute("y"));
+                z = atof(elem->Attribute("z"));
+
+                group.transformations.push_back(new Scale(x, y, z));
+            }
+
+            elem = elem->NextSiblingElement();
+        }
+    }
+
+    //MODELS
+    XMLElement *modelsXML = groupXML->FirstChildElement("models");
+
+    if (modelsXML){
+        XMLElement *modelXML = modelsXML->FirstChildElement("model");
+        while(modelXML){
+            Model model;
+            model.model_file = modelXML->Attribute("file");
+            XMLElement *texture = modelXML->FirstChildElement("texture");
+            if(texture){
+                model.texture_file = texture->Attribute("file");
+            }
+
+            XMLElement *color = modelXML->FirstChildElement("color");
+            if(color){
+                model.diffuse.r = atof(color->FirstChildElement("diffuse")->Attribute("R"));
+                model.diffuse.g = atof(color->FirstChildElement("diffuse")->Attribute("G"));
+                model.diffuse.b = atof(color->FirstChildElement("diffuse")->Attribute("B"));
+                model.ambient.r = atof(color->FirstChildElement("ambient")->Attribute("R"));
+                model.ambient.g = atof(color->FirstChildElement("ambient")->Attribute("G"));
+                model.ambient.b = atof(color->FirstChildElement("ambient")->Attribute("B"));
+                model.specular.r = atof(color->FirstChildElement("specular")->Attribute("R"));
+                model.specular.g = atof(color->FirstChildElement("specular")->Attribute("G"));
+                model.specular.b = atof(color->FirstChildElement("specular")->Attribute("B"));
+                model.emissive.r = atof(color->FirstChildElement("emissive")->Attribute("R"));
+                model.emissive.g = atof(color->FirstChildElement("emissive")->Attribute("G"));
+                model.emissive.b = atof(color->FirstChildElement("emissive")->Attribute("B"));
+                model.shininess = atof(color->FirstChildElement("shininess")->Attribute("value"));
+            }
+
+            group.models.push_back(model);
+
+            modelXML = modelXML->NextSiblingElement("model");
+        }
+    }
+    
+    if(groupXML->FirstChildElement("group")){
+        XMLElement *subgroup = groupXML->FirstChildElement("group");
+        readSubgroupsXML(subgroup, group.subgroups);
+    }
+
+    scene.group = group;
 }
 
 
@@ -226,12 +323,21 @@ void drawFigure(std::string filename){
 
 
 void drawModels(){
-
-    int size = scene.models.size();
+    int size = scene.group.models.size();
     for(int i = 0; i < size; i++){
         glBegin(GL_TRIANGLES);
-        drawFigure(scene.models[i].model_file);
+        drawFigure(scene.group.models[i].model_file);
         glEnd();
+    }
+
+    int subgroups_size = scene.group.subgroups.size();
+    for(int i = 0; i < subgroups_size; i++){
+        size = scene.group.subgroups[subgroups_size].models.size();
+        for(int j = 0; j < size; j++){
+            glBegin(GL_TRIANGLES);
+            drawFigure(scene.group.subgroups[subgroups_size].models[j].model_file);
+            glEnd();
+        }
     }
 }
 
@@ -311,10 +417,10 @@ void youSpinMyHead(int button, int state, int x, int y){
         glutMotionFunc(spinRoutine);
     }
     
-    if (cameraLookingX==-1){
+    /*if (cameraLookingX==-1){
         cameraLookingX=x;
         cameraLookingY=y;
-    }
+    }*/
 }
 
 
@@ -334,10 +440,10 @@ void renderScene(){
     
     drawAxis();
 
-    glRotatef(yawAngle, 0, 1, 0);
-    glRotatef(pitchAngle,1,0,0);
+    //glRotatef(yawAngle, 0, 1, 0);
+    //glRotatef(pitchAngle,1,0,0);
 
-    drawModels();
+    //drawModels();
 
     //end of frame
     glutSwapBuffers();
@@ -356,6 +462,8 @@ int main(int argc, char **argv){
     }else{
         return 1;
     }
+
+    std::cout << scene.group.subgroups[0].subgroups[0].models[0].model_file;
 
     //init GLUT and window
     glutInit(&argc, argv);

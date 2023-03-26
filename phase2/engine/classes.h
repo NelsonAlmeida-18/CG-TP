@@ -214,11 +214,17 @@ class Scale : public Transform{
 };
 
 
+struct Group{
+    std::vector<Transform*> transformations;
+    std::vector<Model> models;
+    std::vector<Group> subgroups;
+};
+
+
 struct Scene{
     float width;
     float height;
     Camera camera;
     std::vector<Light> lights;
-    std::vector<Transform*> transformations;
-    std::vector<Model> models;
+    Group group;
 };
