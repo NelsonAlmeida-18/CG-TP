@@ -1,368 +1,29 @@
 #ifdef __APPLE__
 #include <GLUT/glut.h>
 #else
+#include <GL/glew.h>
 #include <GL/glut.h>
 #endif
 
-#include "tinyxml2.h"
+#include "Parsing/tinyxml2.h"
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
 #include <vector>
 #include "classes.h"
+#include "Parsing/parser.h"
 #include <array>
 #include <cstring>
+#include <unistd.h>
 
+GLuint *buffers;
 
 Scene scene;
 
-
-void readSubgroupsXML(tinyxml2::XMLElement *subgroupXML, std::vector<Group> &subgroups){
-    using namespace tinyxml2;
-
-    std::vector<Group> temp_subgroups;
-
-    while(subgroupXML){
-        Group subgroup;
-        //TRANSFORM
-        XMLElement *transformXML = subgroupXML->FirstChildElement("transform");
-        if(transformXML){
-            XMLElement *elem = transformXML->FirstChildElement();
-            std::vector<Transform*> transf;
-            while(elem){
-                std::string name = std::string(elem->Name());
-
-                if(name == "translate"){
-                    float x, y, z;
-                    x = atof(elem->Attribute("x"));
-                    y = atof(elem->Attribute("y"));
-                    z = atof(elem->Attribute("z"));
-
-                    transf.push_back(new Translate(x, y, z));
-
-                }else if(name == "rotate"){
-                    float angle, x, y, z;
-                    x = atof(elem->Attribute("x"));
-                    y = atof(elem->Attribute("y"));
-                    z = atof(elem->Attribute("z"));
-                    angle = atof(elem->Attribute("angle"));
-
-                    transf.push_back(new Rotate(angle, x, y, z));
-
-                }else if(name == "scale"){
-                    float x, y, z;
-                    x = atof(elem->Attribute("x"));
-                    y = atof(elem->Attribute("y"));
-                    z = atof(elem->Attribute("z"));
-
-                    transf.push_back(new Scale(x, y, z));
-                }
-
-                elem = elem->NextSiblingElement();
-            }
-
-            subgroup.transformations = transf;
-        }
-
-        //MODELS
-        XMLElement *modelsXML = subgroupXML->FirstChildElement("models");
-
-        if (modelsXML){
-            XMLElement *modelXML = modelsXML->FirstChildElement("model");
-            while(modelXML){
-                Model model;
-                model.model_file = modelXML->Attribute("file");
-                XMLElement *texture = modelXML->FirstChildElement("texture");
-                if(texture){
-                    model.texture_file = texture->Attribute("file");
-                }
-
-                XMLElement *color = modelXML->FirstChildElement("color");
-                if(color){
-                    model.diffuse.r = atof(color->FirstChildElement("diffuse")->Attribute("R"));
-                    model.diffuse.g = atof(color->FirstChildElement("diffuse")->Attribute("G"));
-                    model.diffuse.b = atof(color->FirstChildElement("diffuse")->Attribute("B"));
-                    model.ambient.r = atof(color->FirstChildElement("ambient")->Attribute("R"));
-                    model.ambient.g = atof(color->FirstChildElement("ambient")->Attribute("G"));
-                    model.ambient.b = atof(color->FirstChildElement("ambient")->Attribute("B"));
-                    model.specular.r = atof(color->FirstChildElement("specular")->Attribute("R"));
-                    model.specular.g = atof(color->FirstChildElement("specular")->Attribute("G"));
-                    model.specular.b = atof(color->FirstChildElement("specular")->Attribute("B"));
-                    model.emissive.r = atof(color->FirstChildElement("emissive")->Attribute("R"));
-                    model.emissive.g = atof(color->FirstChildElement("emissive")->Attribute("G"));
-                    model.emissive.b = atof(color->FirstChildElement("emissive")->Attribute("B"));
-                    model.shininess = atof(color->FirstChildElement("shininess")->Attribute("value"));
-                }
-
-                subgroup.models.push_back(model);
-                modelXML = modelXML->NextSiblingElement("model");
-            }
-        }
-        
-        if(subgroupXML->FirstChildElement("group")){
-            readSubgroupsXML(subgroupXML->FirstChildElement("group"), subgroup.subgroups);
-        }
-        
-        subgroupXML = subgroupXML->NextSiblingElement("group");
-
-        temp_subgroups.push_back(subgroup);
-    }
-
-    subgroups = temp_subgroups;
-}
-
-
-void readGroupXML(tinyxml2::XMLElement *groupXML){
-    using namespace tinyxml2;
-
-    Group group;
-    //TRANSFORM
-    XMLElement *transformXML = groupXML->FirstChildElement("transform");
-    if(transformXML){
-        XMLElement *elem = transformXML->FirstChildElement();
-        while(elem){
-            std::string name = std::string(elem->Name());
-
-            if(name == "translate"){
-                float x, y, z;
-                x = atof(elem->Attribute("x"));
-                y = atof(elem->Attribute("y"));
-                z = atof(elem->Attribute("z"));
-
-                group.transformations.push_back(new Translate(x, y, z));
-
-            }else if(name == "rotate"){
-                float angle, x, y, z;
-                x = atof(elem->Attribute("x"));
-                y = atof(elem->Attribute("y"));
-                z = atof(elem->Attribute("z"));
-                angle = atof(elem->Attribute("angle"));
-
-                group.transformations.push_back(new Rotate(angle, x, y, z));
-
-            }else if(name == "scale"){
-                float x, y, z;
-                x = atof(elem->Attribute("x"));
-                y = atof(elem->Attribute("y"));
-                z = atof(elem->Attribute("z"));
-
-                group.transformations.push_back(new Scale(x, y, z));
-            }
-
-            elem = elem->NextSiblingElement();
-        }
-    }
-
-    //MODELS
-    XMLElement *modelsXML = groupXML->FirstChildElement("models");
-
-    if (modelsXML){
-        XMLElement *modelXML = modelsXML->FirstChildElement("model");
-        while(modelXML){
-            Model model;
-            model.model_file = modelXML->Attribute("file");
-            XMLElement *texture = modelXML->FirstChildElement("texture");
-            if(texture){
-                model.texture_file = texture->Attribute("file");
-            }
-
-            XMLElement *color = modelXML->FirstChildElement("color");
-            if(color){
-                model.diffuse.r = atof(color->FirstChildElement("diffuse")->Attribute("R"));
-                model.diffuse.g = atof(color->FirstChildElement("diffuse")->Attribute("G"));
-                model.diffuse.b = atof(color->FirstChildElement("diffuse")->Attribute("B"));
-                model.ambient.r = atof(color->FirstChildElement("ambient")->Attribute("R"));
-                model.ambient.g = atof(color->FirstChildElement("ambient")->Attribute("G"));
-                model.ambient.b = atof(color->FirstChildElement("ambient")->Attribute("B"));
-                model.specular.r = atof(color->FirstChildElement("specular")->Attribute("R"));
-                model.specular.g = atof(color->FirstChildElement("specular")->Attribute("G"));
-                model.specular.b = atof(color->FirstChildElement("specular")->Attribute("B"));
-                model.emissive.r = atof(color->FirstChildElement("emissive")->Attribute("R"));
-                model.emissive.g = atof(color->FirstChildElement("emissive")->Attribute("G"));
-                model.emissive.b = atof(color->FirstChildElement("emissive")->Attribute("B"));
-                model.shininess = atof(color->FirstChildElement("shininess")->Attribute("value"));
-            }
-
-            group.models.push_back(model);
-
-            modelXML = modelXML->NextSiblingElement("model");
-        }
-    }
-    
-    if(groupXML->FirstChildElement("group")){
-        XMLElement *subgroup = groupXML->FirstChildElement("group");
-        readSubgroupsXML(subgroup, group.subgroups);
-    }
-
-    scene.group = group;
-}
-
-
-void readXML(char* filename){
-    using namespace tinyxml2;
-
-    XMLDocument doc;
-    doc.LoadFile(filename);
-
-    //WINDOW XML READING
-    XMLElement *window = doc.FirstChildElement("world")->FirstChildElement("window");
-    scene.width = atof(window->Attribute("width"));
-    scene.height = atof(window->Attribute("height"));
-
-    //CAMERA XML READING
-    XMLElement *camera = doc.FirstChildElement("world")->FirstChildElement("camera");
-    
-    XMLElement *position = camera->FirstChildElement("position");
-    Position pos;
-    pos.x = atof(position->Attribute("x"));
-    pos.y = atof(position->Attribute("y"));
-    pos.z = atof(position->Attribute("z"));
-
-    XMLElement *lookat = camera->FirstChildElement("lookAt");
-    LookAt look;
-    look.x = atof(lookat->Attribute("x"));
-    look.y = atof(lookat->Attribute("y"));
-    look.z = atof(lookat->Attribute("z"));
-
-    XMLElement *upXML = camera->FirstChildElement("up");
-    Up up;
-    up.x = atof(upXML->Attribute("x"));
-    up.y = atof(upXML->Attribute("y"));
-    up.z = atof(upXML->Attribute("z"));
-
-    Projection projection;
-    XMLElement *projectionXML = camera->FirstChildElement("projection");
-    if (projectionXML){
-        projection.fov = atof(projectionXML->Attribute("fov"));
-        projection.near = atof(projectionXML->Attribute("near"));
-        projection.far = atof(projectionXML->Attribute("far"));
-    }
-
-    Camera cameraData;
-    cameraData.position = pos;
-    cameraData.lookAt = look;
-    cameraData.up = up;
-    cameraData.projection = projection;
-
-    scene.camera = cameraData;
-
-    //LIGHTS
-    XMLElement *lightsXML = doc.FirstChildElement("world")->FirstChildElement("lights");
-    if(lightsXML){
-        XMLElement *lightXML = lightsXML->FirstChildElement("light");
-        while(lightXML){
-            Light light;
-            light.type = lightXML->Attribute("type");
-
-            if (lightXML->Attribute("posX")){
-                light.posX = atof(lightXML->Attribute("posX"));
-            }
-            if (lightXML->Attribute("posY")){
-                light.posY = atof(lightXML->Attribute("posY"));
-            }
-            if (lightXML->Attribute("posZ")){
-                light.posZ = atof(lightXML->Attribute("posZ"));
-            }
-            if (lightXML->Attribute("dirX")){
-                light.dirX = atof(lightXML->Attribute("dirX"));
-            }
-            if (lightXML->Attribute("dirY")){
-                light.dirY = atof(lightXML->Attribute("dirY"));
-            }
-            if (lightXML->Attribute("dirZ")){
-                light.dirZ = atof(lightXML->Attribute("dirZ"));
-            }
-            if (lightXML->Attribute("cutoff")){
-                light.cutoff = atof(lightXML->Attribute("cutoff"));
-            }
-
-            scene.lights.push_back(light);
-            lightXML = lightXML->NextSiblingElement("light");
-        }
-    }
-
-    //GROUP XML READING
-    XMLElement *group = doc.FirstChildElement("world")->FirstChildElement("group");
-    readGroupXML(group);
-}
-
-
-void tokenize(std::string const &str, const char* delim, std::vector<float> &out){ 
-
-    char *token = strtok(const_cast<char*>(str.c_str()), delim); 
-    while (token != nullptr){ 
-        out.push_back(atof(token)); 
-        token = strtok(nullptr, delim); 
-    }
-} 
-
-
-void drawFigure(std::string filename){
-    std::string str;
-    std::ifstream file3d(filename);
-
-    const char* delim = " ";
-    if (file3d.is_open()){
-        glBegin(GL_TRIANGLES);
-        while(getline(file3d, str)){
-            std::vector<float> out;
-            tokenize(str, delim, out);
-            
-            glVertex3f(out[0], out[1], out[2]);
-            
-            str = "";
-        }
-        glEnd();
-        file3d.close();
-    }
-    else{
-        std::cout << "Could not open file: " << filename << "\n\0";
-    }
-}
-
-
-void drawModels(){
-    int size = scene.group.models.size();
-    for(int i = 0; i < size; i++){
-        glBegin(GL_TRIANGLES);
-        drawFigure(scene.group.models[i].model_file);
-        glEnd();
-    }
-
-    int subgroups_size = scene.group.subgroups.size();
-    for(int i = 0; i < subgroups_size; i++){
-        size = scene.group.subgroups[subgroups_size].models.size();
-        for(int j = 0; j < size; j++){
-            glBegin(GL_TRIANGLES);
-            drawFigure(scene.group.subgroups[subgroups_size].models[j].model_file);
-            glEnd();
-        }
-    }
-}
-
-
-void drawAxis(){
-
-    glBegin(GL_LINES);
-
-    float windowWidth = glutGet(GLUT_WINDOW_WIDTH)/2;
-    float windowHeight = glutGet(GLUT_WINDOW_HEIGHT)/2;
-
-    glColor3f(1,0,0);
-    glVertex3f(windowWidth, 0, 0);
-    glVertex3f(-windowWidth, 0, 0);
-
-    glColor3f(0, 1, 0);
-    glVertex3f(0, windowHeight, 0);
-    glVertex3f(0, -windowHeight, 0);
-
-    glColor3f(0, 0, 1);
-    glVertex3f(0, 0, windowWidth);
-    glVertex3f(0, 0, -windowWidth);
-
-    glEnd();
-}
+int timebase;
+float frames, time_passed, fps;
+char fps_buffer[100];
 
 
 void changeSize(int w, int h) {
@@ -393,6 +54,7 @@ float pitchAngle=0;
 float yawAngle=0;
 int initialMouseX=-1;
 int initialMouseY=-1;
+float cameraLookingX, cameraLookingY;
 // 100% screen width = rotação de 360 graus
 
 void spinRoutine(int x, int y){
@@ -424,6 +86,88 @@ void youSpinMyHead(int button, int state, int x, int y){
 }
 
 
+void tokenize(std::string const &str, const char* delim, std::vector<float> &out){ 
+
+    char *token = strtok(const_cast<char*>(str.c_str()), delim); 
+    while (token != nullptr){ 
+        out.push_back(atof(token)); 
+        token = strtok(nullptr, delim); 
+    }
+} 
+
+
+int drawFigure(std::string filename, GLuint *buffers, int buffer){
+    std::string str;
+    std::ifstream file3d(filename);
+
+    const char* delim = " ";
+    if (file3d.is_open()){
+               getline(file3d,str);
+        int numVertices = std::atoi(str.c_str());
+
+        float* vertexBuffer = (float*)malloc(numVertices*3*sizeof(float));
+        
+        int pos=0;
+        while(getline(file3d, str)){
+
+            std::vector<float> out;
+            tokenize(str, delim, out);
+            for (int i=0; i<3;i++,pos++){
+                vertexBuffer[pos]=out[i];
+            }
+            
+            str = "";
+        }
+
+        file3d.close();
+        
+        glGenBuffers(1, buffers);
+        glBindBuffer(GL_ARRAY_BUFFER, buffers[buffer]);
+        glBufferData(GL_ARRAY_BUFFER, pos*sizeof(float),vertexBuffer,GL_STATIC_DRAW);
+        
+        return pos;
+    }
+    else{
+        std::cout << "Could not open file: " << filename << "\n\0";
+    }
+    return 0;
+}
+
+
+std::vector<int> drawModels(GLuint *buffers){
+    int size = scene.group.models.size();
+    std::vector<int> numVertices;
+    
+    for(int i = 0; i < size; i++){
+        numVertices.push_back(drawFigure(scene.group.models[i].model_file, buffers, i));
+    }
+    
+    return numVertices;
+}
+
+
+void drawAxis(){
+
+    glBegin(GL_LINES);
+
+    float windowWidth = glutGet(GLUT_WINDOW_WIDTH)/2;
+    float windowHeight = glutGet(GLUT_WINDOW_HEIGHT)/2;
+
+    glColor3f(1,0,0);
+    glVertex3f(windowWidth, 0, 0);
+    glVertex3f(-windowWidth, 0, 0);
+
+    glColor3f(0, 1, 0);
+    glVertex3f(0, windowHeight, 0);
+    glVertex3f(0, -windowHeight, 0);
+
+    glColor3f(0, 0, 1);
+    glVertex3f(0, 0, windowWidth);
+    glVertex3f(0, 0, -windowWidth);
+
+    glEnd();
+}
+
 
 void renderScene(){
     //clear buffers
@@ -443,7 +187,28 @@ void renderScene(){
     //glRotatef(yawAngle, 0, 1, 0);
     //glRotatef(pitchAngle,1,0,0);
 
-    //drawModels();
+    std::vector<int> numVertices = drawModels(buffers);
+
+    for(int i=0; i<scene.group.models.size(); i++){
+        glBindBuffer(GL_ARRAY_BUFFER,buffers[i]);
+        glVertexPointer(3,GL_FLOAT, 0,0);
+        glColor3f(0.4,0.8,0.7);
+        glDrawArrays(GL_TRIANGLES, 0, numVertices[i]/3);
+    }
+
+    glutPostRedisplay();
+
+    frames++;
+    time_passed = glutGet(GLUT_ELAPSED_TIME);
+    if (time_passed - timebase > 1000) {
+        fps = frames*1000.0/(time_passed-timebase);
+        timebase = time_passed;
+        frames = 0;
+    }
+
+    sprintf(fps_buffer, "FPS: %d", (int) fps);
+
+    glutSetWindowTitle(fps_buffer);
 
     //end of frame
     glutSwapBuffers();
@@ -455,16 +220,15 @@ char path[50];
 int main(int argc, char **argv){
 
     strcpy(path, "../../xml/");
-
     if(argc > 1){
         strcat(path, argv[1]);
-        readXML(path);
+        readXML(path, scene);
+        //generate buffers
+        buffers = (GLuint*)malloc(sizeof(GLuint)*scene.group.models.size());
     }else{
         return 1;
     }
-
-    std::cout << scene.group.subgroups[0].subgroups[0].models[0].model_file;
-
+    
     //init GLUT and window
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DEPTH|GLUT_DOUBLE|GLUT_RGBA);
@@ -481,6 +245,11 @@ int main(int argc, char **argv){
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
+
+    glewInit();
+    glEnableClientState(GL_VERTEX_ARRAY); // para aceitar os arrays de vértices para a otimização
+
+    time_passed = glutGet(GLUT_ELAPSED_TIME);
 
     //GLUT main cycle
     glutMainLoop();
