@@ -4,18 +4,16 @@
 #include <cstdlib>
 #include "../classes.h"
 
-void readSubgroupsXML(tinyxml2::XMLElement *subgroupXML, std::vector<Group> &subgroups){
+
+void readSubgroupsXML(tinyxml2::XMLElement *subgroupXML, std::vector<DrawModel> &sceneDrawModels, std::vector<Transform*> transf){
     using namespace tinyxml2;
 
-    std::vector<Group> temp_subgroups;
-
+    int n = 0;
     while(subgroupXML){
-        Group subgroup;
         //TRANSFORM
         XMLElement *transformXML = subgroupXML->FirstChildElement("transform");
         if(transformXML){
             XMLElement *elem = transformXML->FirstChildElement();
-            std::vector<Transform*> transf;
             while(elem){
                 std::string name = std::string(elem->Name());
 
@@ -26,6 +24,7 @@ void readSubgroupsXML(tinyxml2::XMLElement *subgroupXML, std::vector<Group> &sub
                     z = atof(elem->Attribute("z"));
 
                     transf.push_back(new Translate(x, y, z));
+                    n++;
 
                 }else if(name == "rotate"){
                     float angle, x, y, z;
@@ -35,6 +34,7 @@ void readSubgroupsXML(tinyxml2::XMLElement *subgroupXML, std::vector<Group> &sub
                     angle = atof(elem->Attribute("angle"));
 
                     transf.push_back(new Rotate(angle, x, y, z));
+                    n++;
 
                 }else if(name == "scale"){
                     float x, y, z;
@@ -43,12 +43,11 @@ void readSubgroupsXML(tinyxml2::XMLElement *subgroupXML, std::vector<Group> &sub
                     z = atof(elem->Attribute("z"));
 
                     transf.push_back(new Scale(x, y, z));
+                    n++;
                 }
 
                 elem = elem->NextSiblingElement();
             }
-
-            subgroup.transformations = transf;
         }
 
         //MODELS
@@ -57,6 +56,7 @@ void readSubgroupsXML(tinyxml2::XMLElement *subgroupXML, std::vector<Group> &sub
         if (modelsXML){
             XMLElement *modelXML = modelsXML->FirstChildElement("model");
             while(modelXML){
+                DrawModel drawModel;
                 Model model;
                 model.model_file = modelXML->Attribute("file");
                 XMLElement *texture = modelXML->FirstChildElement("texture");
@@ -81,30 +81,33 @@ void readSubgroupsXML(tinyxml2::XMLElement *subgroupXML, std::vector<Group> &sub
                     model.shininess = atof(color->FirstChildElement("shininess")->Attribute("value"));
                 }
 
-                subgroup.models.push_back(model);
+                drawModel.model = model;
+                drawModel.transformations = transf;
+                sceneDrawModels.push_back(drawModel);
                 modelXML = modelXML->NextSiblingElement("model");
             }
         }
         
         if(subgroupXML->FirstChildElement("group")){
-            readSubgroupsXML(subgroupXML->FirstChildElement("group"), subgroup.subgroups);
+            readSubgroupsXML(subgroupXML->FirstChildElement("group"), sceneDrawModels, transf);
+        }else{
+            while(n > 0){
+                transf.pop_back();
+                n--;
+            }
         }
         
         subgroupXML = subgroupXML->NextSiblingElement("group");
-
-        temp_subgroups.push_back(subgroup);
     }
-
-    subgroups = temp_subgroups;
 }
 
 
-void readGroupXML(tinyxml2::XMLElement *groupXML, Group &sceneGroup){
+void readGroupXML(tinyxml2::XMLElement *groupXML, std::vector<DrawModel> &sceneDrawModels){
     using namespace tinyxml2;
 
-    Group group;
     //TRANSFORM
     XMLElement *transformXML = groupXML->FirstChildElement("transform");
+    std::vector<Transform*> transf;
     if(transformXML){
         XMLElement *elem = transformXML->FirstChildElement();
         while(elem){
@@ -116,7 +119,7 @@ void readGroupXML(tinyxml2::XMLElement *groupXML, Group &sceneGroup){
                 y = atof(elem->Attribute("y"));
                 z = atof(elem->Attribute("z"));
 
-                group.transformations.push_back(new Translate(x, y, z));
+                transf.push_back(new Translate(x, y, z));
 
             }else if(name == "rotate"){
                 float angle, x, y, z;
@@ -125,7 +128,7 @@ void readGroupXML(tinyxml2::XMLElement *groupXML, Group &sceneGroup){
                 z = atof(elem->Attribute("z"));
                 angle = atof(elem->Attribute("angle"));
 
-                group.transformations.push_back(new Rotate(angle, x, y, z));
+                transf.push_back(new Rotate(angle, x, y, z));
 
             }else if(name == "scale"){
                 float x, y, z;
@@ -133,7 +136,7 @@ void readGroupXML(tinyxml2::XMLElement *groupXML, Group &sceneGroup){
                 y = atof(elem->Attribute("y"));
                 z = atof(elem->Attribute("z"));
 
-                group.transformations.push_back(new Scale(x, y, z));
+                transf.push_back(new Scale(x, y, z));
             }
 
             elem = elem->NextSiblingElement();
@@ -146,6 +149,7 @@ void readGroupXML(tinyxml2::XMLElement *groupXML, Group &sceneGroup){
     if (modelsXML){
         XMLElement *modelXML = modelsXML->FirstChildElement("model");
         while(modelXML){
+            DrawModel drawModel;
             Model model;
             model.model_file = modelXML->Attribute("file");
             XMLElement *texture = modelXML->FirstChildElement("texture");
@@ -170,7 +174,9 @@ void readGroupXML(tinyxml2::XMLElement *groupXML, Group &sceneGroup){
                 model.shininess = atof(color->FirstChildElement("shininess")->Attribute("value"));
             }
 
-            group.models.push_back(model);
+            drawModel.transformations = transf;
+            drawModel.model = model;
+            sceneDrawModels.push_back(drawModel);
 
             modelXML = modelXML->NextSiblingElement("model");
         }
@@ -178,10 +184,8 @@ void readGroupXML(tinyxml2::XMLElement *groupXML, Group &sceneGroup){
     
     if(groupXML->FirstChildElement("group")){
         XMLElement *subgroup = groupXML->FirstChildElement("group");
-        readSubgroupsXML(subgroup, group.subgroups);
+        readSubgroupsXML(subgroup, sceneDrawModels, transf);
     }
-
-    sceneGroup = group;
 }
 
 
@@ -227,14 +231,6 @@ void readXML(char* filename, Scene &mainScene){
         scene.camera.projection.far = atof(projectionXML->Attribute("far"));
     }
 
-    /*Camera cameraData;
-    cameraData.position = pos;
-    cameraData.lookAt = look;
-    cameraData.up = up;
-    cameraData.projection = projection;
-
-    scene.camera = cameraData;*/
-
     //LIGHTS
     XMLElement *lightsXML = doc.FirstChildElement("world")->FirstChildElement("lights");
     if(lightsXML){
@@ -273,5 +269,5 @@ void readXML(char* filename, Scene &mainScene){
     //GROUP XML READING
     XMLElement *group = doc.FirstChildElement("world")->FirstChildElement("group");
     mainScene = scene;
-    readGroupXML(group, mainScene.group);
+    readGroupXML(group, mainScene.drawModels);
 }
