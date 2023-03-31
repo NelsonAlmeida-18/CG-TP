@@ -123,7 +123,7 @@ class Translate : public Transform{
         }
 
         void execute(){
-            //glTranslatef(x, y, z);
+            glTranslatef(this->x, this->y, this->z);
         }
 
         float getX(){
@@ -159,7 +159,7 @@ class Rotate : public Transform{
         }
 
         void execute(){
-            //glRotatef(angle, x, y, z);
+            glRotatef(this->angle, this->x, this->y, this->z);
         }
 
         float getX(){
@@ -193,7 +193,7 @@ class Scale : public Transform{
         }
 
         void execute(){
-            //glScalef(x, y, z);
+            glScalef(this->x, this->y, this->z);
         }
 
         float getX(){
@@ -221,10 +221,16 @@ struct Group{
 };
 
 
+struct DrawModel{
+    Model model;
+    std::vector<Transform*> transformations;
+};
+
+
 struct Scene{
     float width;
     float height;
     Camera camera;
     std::vector<Light> lights;
-    Group group;
+    std::vector<DrawModel> drawModels;
 };

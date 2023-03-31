@@ -20,6 +20,8 @@
 GLuint *buffers;
 
 Scene scene;
+std::vector<DrawModel> drawModelVector;
+std::vector<int> numVertices;
 
 int timebase;
 float frames, time_passed, fps;
@@ -49,6 +51,7 @@ void changeSize(int w, int h) {
     // return to the model view matrix mode
     glMatrixMode(GL_MODELVIEW);
 }
+
 
 float pitchAngle=0;
 float yawAngle=0;
@@ -93,10 +96,10 @@ void tokenize(std::string const &str, const char* delim, std::vector<float> &out
         out.push_back(atof(token)); 
         token = strtok(nullptr, delim); 
     }
-} 
+}
 
 
-int drawFigure(std::string filename, GLuint *buffers, int buffer){
+int drawFigure(std::string filename, int buffer){
     std::string str;
     std::ifstream file3d(filename);
 
@@ -121,7 +124,6 @@ int drawFigure(std::string filename, GLuint *buffers, int buffer){
 
         file3d.close();
         
-        glGenBuffers(1, buffers);
         glBindBuffer(GL_ARRAY_BUFFER, buffers[buffer]);
         glBufferData(GL_ARRAY_BUFFER, pos*sizeof(float),vertexBuffer,GL_STATIC_DRAW);
         
@@ -129,17 +131,18 @@ int drawFigure(std::string filename, GLuint *buffers, int buffer){
     }
     else{
         std::cout << "Could not open file: " << filename << "\n\0";
+        exit(1);
     }
     return 0;
 }
 
 
-std::vector<int> drawModels(GLuint *buffers){
-    int size = scene.group.models.size();
+std::vector<int> drawModels(){
+    int size = scene.drawModels.size();
     std::vector<int> numVertices;
     
     for(int i = 0; i < size; i++){
-        numVertices.push_back(drawFigure(scene.group.models[i].model_file, buffers, i));
+        numVertices.push_back(drawFigure(scene.drawModels[i].model.model_file, i));
     }
     
     return numVertices;
@@ -184,16 +187,24 @@ void renderScene(){
     
     drawAxis();
 
-    //glRotatef(yawAngle, 0, 1, 0);
-    //glRotatef(pitchAngle,1,0,0);
+    glRotatef(yawAngle, 0, 1, 0);
+    glRotatef(pitchAngle,1,0,0);
 
-    std::vector<int> numVertices = drawModels(buffers);
+    numVertices = drawModels();
 
-    for(int i=0; i<scene.group.models.size(); i++){
+    for(int i=0; i<scene.drawModels.size(); i++){
+        glPushMatrix();
+        
+        for(Transform *t : scene.drawModels[i].transformations){
+            t->execute();
+        }
+
         glBindBuffer(GL_ARRAY_BUFFER,buffers[i]);
         glVertexPointer(3,GL_FLOAT, 0,0);
         glColor3f(0.4,0.8,0.7);
         glDrawArrays(GL_TRIANGLES, 0, numVertices[i]/3);
+
+        glPopMatrix();
     }
 
     glutPostRedisplay();
@@ -215,6 +226,11 @@ void renderScene(){
 }
 
 
+void genVbos(){
+
+}
+
+
 char path[50];
 
 int main(int argc, char **argv){
@@ -224,7 +240,7 @@ int main(int argc, char **argv){
         strcat(path, argv[1]);
         readXML(path, scene);
         //generate buffers
-        buffers = (GLuint*)malloc(sizeof(GLuint)*scene.group.models.size());
+        buffers = (GLuint*)malloc(sizeof(GLuint)*scene.drawModels.size());
     }else{
         return 1;
     }
@@ -248,6 +264,7 @@ int main(int argc, char **argv){
 
     glewInit();
     glEnableClientState(GL_VERTEX_ARRAY); // para aceitar os arrays de vértices para a otimização
+    glGenBuffers(scene.drawModels.size(), buffers);
 
     time_passed = glutGet(GLUT_ELAPSED_TIME);
 
