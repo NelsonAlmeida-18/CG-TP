@@ -101,6 +101,7 @@ void tokenize(std::string const &str, const char* delim, std::vector<float> &out
 
 int drawFigure(std::string filename, int buffer){
     std::string str;
+    filename = "../../3d/" + filename;
     std::ifstream file3d(filename);
 
     const char* delim = " ";
