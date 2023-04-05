@@ -99,6 +99,19 @@ struct Model{
 };
 
 
+struct Point{
+    float x;
+    float y; 
+    float z;
+
+    Point(float x, float y, float z){
+        this->x = x;
+        this->y = y;
+        this->z = z;
+    }
+};
+
+
 class Transform{
     
     public:
@@ -107,6 +120,9 @@ class Transform{
         virtual float getY() = 0;
         virtual float getZ() = 0;
         virtual float getAngle() = 0;
+        virtual Point getPoint(int i) = 0;
+        virtual bool getAlign() = 0;
+        virtual float getTime() = 0;
 };
 
 
@@ -138,8 +154,44 @@ class Translate : public Transform{
             return this->z;
         }
 
-        float getAngle(){
-            return NULL;
+        float getAngle(){return 0;}
+        Point getPoint(int i){return Point(0,0,0);}
+        bool getAlign(){return false;}
+        float getTime(){return 0;}
+};
+
+
+class TranslateCurve : public Transform{
+    std::vector<Point> points;
+    float time;
+    bool align;
+
+    public:
+        TranslateCurve(float time, bool align, std::vector<Point> points){
+            this->time = time;
+            this->align = align;
+            this->points = points;
+        }
+
+        bool getAlign(){
+            return this->align;
+        }
+
+        float getTime(){
+            return this->time;
+        }
+
+        Point getPoint(int i){
+            return this->points[i];
+        }
+
+        float getX(){return 0;}
+        float getY(){return 0;}
+        float getZ(){return 0;}
+        float getAngle(){return 0;}
+
+        void execute(){
+
         }
 };
 
@@ -177,6 +229,50 @@ class Rotate : public Transform{
         float getAngle(){
             return this->angle;
         }
+
+        Point getPoint(int i){return Point(0,0,0);}
+        float getTime(){return 0;}
+        bool getAlign(){return false;}
+};
+
+
+class RotateTime : public Transform{
+    float time;
+    float x;
+    float y;
+    float z;
+
+    public:
+        RotateTime(float time, float x, float y, float z){
+            this->time = time;
+            this->x = x;
+            this->y = y;
+            this->z = z;
+        }
+
+        void execute(){
+            glRotatef(glutGet(GLUT_ELAPSED_TIME)*360/this->time, this->x, this->y, this->z);
+        }
+
+        float getX(){
+            return this->x;
+        }
+
+        float getY(){
+            return this->y;
+        }
+
+        float getZ(){
+            return this->z;
+        }
+
+        float getTime(){
+            return this->time;
+        }
+
+        float getAngle(){return 0;}
+        bool getAlign(){return false;}
+        Point getPoint(int i){return Point(0,0,0);}
 };
 
 
@@ -208,16 +304,10 @@ class Scale : public Transform{
             return this->z;
         }
 
-        float getAngle(){
-            return NULL;
-        }
-};
-
-
-struct Group{
-    std::vector<Transform*> transformations;
-    std::vector<Model> models;
-    std::vector<Group> subgroups;
+        float getAngle(){return 0;}
+        float getTime(){return 0;}
+        Point getPoint(int i){return Point(0,0,0);}
+        bool getAlign(){return false;}
 };
 
 
