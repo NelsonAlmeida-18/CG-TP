@@ -18,22 +18,52 @@ void readSubgroupsXML(tinyxml2::XMLElement *subgroupXML, std::vector<DrawModel> 
                 std::string name = std::string(elem->Name());
 
                 if(name == "translate"){
-                    float x, y, z;
-                    x = atof(elem->Attribute("x"));
-                    y = atof(elem->Attribute("y"));
-                    z = atof(elem->Attribute("z"));
+                    if(elem->Attribute("time")){
+                        bool align = false;
+                        if(strcmp(elem->Attribute("align"), "true") == 0){
+                            align = true;
+                        }
 
-                    transf.push_back(new Translate(x, y, z));
+                        float time = atof(elem->Attribute("time"));
+                        std::vector<Point> points;
+                        for(XMLElement *point = elem->FirstChildElement("point"); point; point = point->NextSiblingElement("point")){
+                            float x = atof(point->Attribute("x"));
+                            float y = atof(point->Attribute("y"));
+                            float z = atof(point->Attribute("z"));
+
+                            points.push_back(Point(x, y, z));
+                        }
+
+                        transf.push_back(new TranslateCurve(time, align, points));
+
+                    }else{
+                        float x, y, z;
+                        x = atof(elem->Attribute("x"));
+                        y = atof(elem->Attribute("y"));
+                        z = atof(elem->Attribute("z"));
+
+                        transf.push_back(new Translate(x, y, z));
+                    }
                     n++;
 
                 }else if(name == "rotate"){
-                    float angle, x, y, z;
-                    x = atof(elem->Attribute("x"));
-                    y = atof(elem->Attribute("y"));
-                    z = atof(elem->Attribute("z"));
-                    angle = atof(elem->Attribute("angle"));
+                    if(elem->Attribute("time")){
+                        float time, x, y, z;
+                        x = atof(elem->Attribute("x"));
+                        y = atof(elem->Attribute("y"));
+                        z = atof(elem->Attribute("z"));
+                        time = atof(elem->Attribute("time"));
 
-                    transf.push_back(new Rotate(angle, x, y, z));
+                        transf.push_back(new RotateTime(time, x, y, z));
+                    }else{
+                        float angle, x, y, z;
+                        x = atof(elem->Attribute("x"));
+                        y = atof(elem->Attribute("y"));
+                        z = atof(elem->Attribute("z"));
+                        angle = atof(elem->Attribute("angle"));
+
+                        transf.push_back(new Rotate(angle, x, y, z));
+                    }
                     n++;
 
                 }else if(name == "scale"){
@@ -114,21 +144,52 @@ void readGroupXML(tinyxml2::XMLElement *groupXML, std::vector<DrawModel> &sceneD
             std::string name = std::string(elem->Name());
 
             if(name == "translate"){
-                float x, y, z;
-                x = atof(elem->Attribute("x"));
-                y = atof(elem->Attribute("y"));
-                z = atof(elem->Attribute("z"));
 
-                transf.push_back(new Translate(x, y, z));
+                if(elem->Attribute("time")){
+                    bool align = false;
+                    if(strcmp(elem->Attribute("align"), "true") == 0){
+                        align = true;
+                    }
+
+                    float time = atof(elem->Attribute("time"));
+                    std::vector<Point> points;
+                    for(XMLElement *point = elem->FirstChildElement("point"); point; point = point->NextSiblingElement("point")){
+                        float x = atof(point->Attribute("x"));
+                        float y = atof(point->Attribute("y"));
+                        float z = atof(point->Attribute("z"));
+
+                        points.push_back(Point(x, y, z));
+                    }
+
+                    transf.push_back(new TranslateCurve(time, align, points));
+
+                }else{
+                    float x, y, z;
+                    x = atof(elem->Attribute("x"));
+                    y = atof(elem->Attribute("y"));
+                    z = atof(elem->Attribute("z"));
+
+                    transf.push_back(new Translate(x, y, z));
+                }
 
             }else if(name == "rotate"){
-                float angle, x, y, z;
-                x = atof(elem->Attribute("x"));
-                y = atof(elem->Attribute("y"));
-                z = atof(elem->Attribute("z"));
-                angle = atof(elem->Attribute("angle"));
+                if(elem->Attribute("time")){
+                    float time, x, y, z;
+                    x = atof(elem->Attribute("x"));
+                    y = atof(elem->Attribute("y"));
+                    z = atof(elem->Attribute("z"));
+                    time = atof(elem->Attribute("time"));
 
-                transf.push_back(new Rotate(angle, x, y, z));
+                    transf.push_back(new RotateTime(time, x, y, z));
+                }else{
+                    float angle, x, y, z;
+                    x = atof(elem->Attribute("x"));
+                    y = atof(elem->Attribute("y"));
+                    z = atof(elem->Attribute("z"));
+                    angle = atof(elem->Attribute("angle"));
+
+                    transf.push_back(new Rotate(angle, x, y, z));
+                }
 
             }else if(name == "scale"){
                 float x, y, z;

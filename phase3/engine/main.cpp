@@ -101,6 +101,7 @@ void tokenize(std::string const &str, const char* delim, std::vector<float> &out
 
 int drawFigure(std::string filename, int buffer){
     std::string str;
+    filename = "../../3d/" + filename;
     std::ifstream file3d(filename);
 
     const char* delim = " ";
@@ -190,7 +191,7 @@ void renderScene(){
     glRotatef(yawAngle, 0, 1, 0);
     glRotatef(pitchAngle,1,0,0);
 
-    numVertices = drawModels();
+    /*numVertices = drawModels();
 
     for(int i=0; i<scene.drawModels.size(); i++){
         glPushMatrix();
@@ -205,7 +206,7 @@ void renderScene(){
         glDrawArrays(GL_TRIANGLES, 0, numVertices[i]/3);
 
         glPopMatrix();
-    }
+    }*/
 
     glutPostRedisplay();
 
