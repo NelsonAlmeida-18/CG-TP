@@ -98,6 +98,52 @@ void tokenize(std::string const &str, const char* delim, std::vector<float> &out
     }
 }
 
+int drawObj(std::string filename, int buffer){
+    std::string str;
+    std::ifstream file3d(filename);
+
+    const char* delim = " ";
+    if (file3d.is_open()){
+               getline(file3d,str);
+        int numVertices = 0;
+
+        std::vector<float> vectorBuffer;
+        
+        int pos=0;
+        while(getline(file3d, str)){
+            
+            std::vector<char*> line;
+            char *token = strtok(const_cast<char*>(str.c_str()), delim);
+            while (token != nullptr){
+                line.push_back(token);
+                token = strtok(nullptr, delim);
+            }
+
+            if (std::strcmp(line[0],"v")==0){
+                vectorBuffer.push_back(atof(line[1]));
+                vectorBuffer.push_back(atof(line[2]));
+                vectorBuffer.push_back(atof(line[3]));
+                pos+=3;
+            }
+            else{
+                break;
+            }
+
+            str = "";
+        }
+
+        file3d.close();
+        
+        glBindBuffer(GL_ARRAY_BUFFER, buffers[buffer]);
+        glBufferData(GL_ARRAY_BUFFER, vectorBuffer.size()*sizeof(float),vectorBuffer.data(),GL_STATIC_DRAW);
+        return vectorBuffer.size();
+    }
+    else{
+        std::cout << "Could not open file: " << filename << "\n\0";
+        exit(1);
+    }
+    return 0;
+}
 
 int drawFigure(std::string filename, int buffer){
     std::string str;
@@ -108,16 +154,16 @@ int drawFigure(std::string filename, int buffer){
     if (file3d.is_open()){
                getline(file3d,str);
         int numVertices = std::atoi(str.c_str());
+       
+        std::vector<float> vectorBuffer;
 
-        float* vertexBuffer = (float*)malloc(numVertices*3*sizeof(float));
-        
         int pos=0;
         while(getline(file3d, str)){
 
             std::vector<float> out;
             tokenize(str, delim, out);
             for (int i=0; i<3;i++,pos++){
-                vertexBuffer[pos]=out[i];
+                vectorBuffer.push_back(out[i]);
             }
             
             str = "";
@@ -126,7 +172,7 @@ int drawFigure(std::string filename, int buffer){
         file3d.close();
         
         glBindBuffer(GL_ARRAY_BUFFER, buffers[buffer]);
-        glBufferData(GL_ARRAY_BUFFER, pos*sizeof(float),vertexBuffer,GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, pos*sizeof(float),vectorBuffer.data(),GL_STATIC_DRAW);
         
         return pos;
     }
@@ -143,7 +189,14 @@ std::vector<int> drawModels(){
     std::vector<int> numVertices;
     
     for(int i = 0; i < size; i++){
-        numVertices.push_back(drawFigure(scene.drawModels[i].model.model_file, i));
+        std::string filename = scene.drawModels[i].model.model_file;
+        if (filename.size() >= 4 && filename.substr(filename.size() - 4) == ".obj") {
+            numVertices.push_back(drawObj(filename, i));
+        }
+        else{
+            numVertices.push_back(drawFigure(scene.drawModels[i].model.model_file, i));
+        }
+        
     }
     
     return numVertices;
@@ -263,7 +316,10 @@ int main(int argc, char **argv){
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    glewInit();
+    #ifdef __APPLE__
+        glewInit();
+    #endif
+
     glEnableClientState(GL_VERTEX_ARRAY); // para aceitar os arrays de vértices para a otimização
     glGenBuffers(scene.drawModels.size(), buffers);
 
