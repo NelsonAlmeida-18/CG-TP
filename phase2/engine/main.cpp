@@ -100,6 +100,7 @@ void tokenize(std::string const &str, const char* delim, std::vector<float> &out
 
 int drawObj(std::string filename, int buffer){
     std::string str;
+    filename = "../../3d/" + filename;
     std::ifstream file3d(filename);
 
     const char* delim = " ";
@@ -316,7 +317,7 @@ int main(int argc, char **argv){
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    #ifdef __APPLE__
+    #ifndef __APPLE__
         glewInit();
     #endif
 
