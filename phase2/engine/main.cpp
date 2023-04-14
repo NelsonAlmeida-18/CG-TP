@@ -190,6 +190,7 @@ std::vector<int> drawModels(){
     std::vector<int> numVertices;
     
     for(int i = 0; i < size; i++){
+
         std::string filename = scene.drawModels[i].model.model_file;
         if (filename.size() >= 4 && filename.substr(filename.size() - 4) == ".obj") {
             numVertices.push_back(drawObj(filename, i));
@@ -197,7 +198,6 @@ std::vector<int> drawModels(){
         else{
             numVertices.push_back(drawFigure(scene.drawModels[i].model.model_file, i));
         }
-        
     }
     
     return numVertices;
@@ -243,7 +243,7 @@ void renderScene(){
     drawAxis();
 
     glRotatef(yawAngle, 0, 1, 0);
-    glRotatef(pitchAngle,1,0,0);
+    glRotatef(pitchAngle,1,0,1);
 
     numVertices = drawModels();
 
@@ -281,16 +281,12 @@ void renderScene(){
 }
 
 
-void genVbos(){
-
-}
-
-
 char path[50];
 
 int main(int argc, char **argv){
 
     strcpy(path, "../../xml/");
+
     if(argc > 1){
         strcat(path, argv[1]);
         readXML(path, scene);

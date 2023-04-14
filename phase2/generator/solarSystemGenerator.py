@@ -3,14 +3,14 @@ import sys
 import os
 
 distanceScale = 1/10**6
-planetScale = 1/100
+planetScale = 1/1000
 
 
 def solarSystemGenerator():
     scale=1
     filename="solarSystem.xml"
     if (sys.argv[1]):
-        scale=int(sys.argv[1])
+        scale=float(sys.argv[1])
     if (sys.argv[2]):
         filename=sys.argv[2]
 
@@ -52,11 +52,11 @@ def generateTransformations(name,distance):
     template = f"""
     <group>
         <transform>
-            <translate x="{distance}" y="0" z="0">
-            <scale x="1" y="1" z="1">
+            <translate x="{distance}" y="0" z="0" />
+            <scale x="1" y="1" z="1" />
         </transform>
         <models>
-            <model file="{name}.3d"></model>
+            <model file="solarSystem/{name}.3d" />
         </models>
     </group>
     """
