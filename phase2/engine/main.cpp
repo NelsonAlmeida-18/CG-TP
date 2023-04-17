@@ -91,13 +91,13 @@ void youSpinMyHead(int button, int state, int x, int y){
 
 void processSpecialKeys(int key, int xx, int yy){
     if(key == GLUT_KEY_UP){
-        scene.camera.lookAt.y += 0.5;
+        scene.camera.lookAt.y += 1;
     }else if(key == GLUT_KEY_DOWN){
-        scene.camera.lookAt.y -= 0.5;
+        scene.camera.lookAt.y -= 1;
     }else if(key == GLUT_KEY_LEFT){
-        scene.camera.lookAt.x -= 0.5;
+        scene.camera.lookAt.x -= 1;
     }else if(key == GLUT_KEY_RIGHT){
-        scene.camera.lookAt.x += 0.5;
+        scene.camera.lookAt.x += 1;
     }
 }
 
@@ -253,7 +253,7 @@ void renderScene(){
     //draw objects
     glPolygonMode(GL_FRONT,GL_LINE);
     
-    drawAxis();
+    //drawAxis();
 
     glRotatef(yawAngle, 0, 1, 0);
     glRotatef(pitchAngle,1,0,1);
