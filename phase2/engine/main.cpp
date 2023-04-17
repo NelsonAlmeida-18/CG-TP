@@ -89,6 +89,19 @@ void youSpinMyHead(int button, int state, int x, int y){
 }
 
 
+void processSpecialKeys(int key, int xx, int yy){
+    if(key == GLUT_KEY_UP){
+        scene.camera.lookAt.y += 0.5;
+    }else if(key == GLUT_KEY_DOWN){
+        scene.camera.lookAt.y -= 0.5;
+    }else if(key == GLUT_KEY_LEFT){
+        scene.camera.lookAt.x -= 0.5;
+    }else if(key == GLUT_KEY_RIGHT){
+        scene.camera.lookAt.x += 0.5;
+    }
+}
+
+
 void tokenize(std::string const &str, const char* delim, std::vector<float> &out){ 
 
     char *token = strtok(const_cast<char*>(str.c_str()), delim); 
@@ -312,6 +325,8 @@ int main(int argc, char **argv){
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
+
+    glutSpecialFunc(processSpecialKeys);
 
     #ifndef __APPLE__
         glewInit();
