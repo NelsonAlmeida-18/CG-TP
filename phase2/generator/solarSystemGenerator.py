@@ -20,7 +20,7 @@ def solarSystemGenerator():
     <world>
         <window width="512" height="512" />
         <camera>
-            <position x="250" y="10" z="250" />
+            <position x="10" y="10" z="10" />
             <lookAt x="0" y="0" z="0" />
             <up x="0" y="1" z="0" />
             <projection fov="60" near="1" far="1000" />
@@ -94,12 +94,20 @@ def solarSystemGenerator():
 
 
     for x in planets:
-        if x["name"]=="Sun":
-            generatePlanet(x["name"], scale*auScale*x["radius"])
-            xmlHeader+=generateTransformations(x['name'], scale*auScale*x["distance"], 0, scale)
+        #if x["name"] == "Saturn":
+        #    generatePlanet(x["name"], scale*planetScale*x["radius"])
+        #    generateRing(planetScale*scale*["earth"]*21, planetScale*scale*astros["earth"]*16.5)
+        #    xmlHeader+=generateTransformations(x, scale*distanceScale*distances[x], 1)
+        if x["name"] == "Sun":
+            generatePlanet(x["name"], scale*planetScale*x["radius"])
+            xmlHeader+=generateTransformations(x["name"], scale*distanceScale*x["distance"], 0, 1)
+        elif x["name"] == "Saturn":
+            generatePlanet(x["name"], scale*planetScale*x["radius"])
+            generateRing(planetScale*scale*6371*21, planetScale*scale*6371*8)
+            xmlHeader+=generateTransformations(x["name"], scale*distanceScale*x["distance"]+(695508*scale*planetScale), 1, 1)
         else:
-            generatePlanet(x["name"], scale*5*auScale*x["radius"])
-            xmlHeader+=generateTransformations(x['name'], scale*5*auScale*x["distance"], 0, scale*5)
+            generatePlanet(x["name"], scale*planetScale*x["radius"])
+            xmlHeader+=generateTransformations(x["name"], scale*distanceScale*x["distance"]+(695508*scale*planetScale), 0, 1)
 
     xmlHeader+=finalXML
     file = open(filename, "w")
@@ -113,7 +121,7 @@ def generateTransformations(name,distance,torus, scale):
     <group>
         <transform>
             <translate x="{distance}" y="0" z="0" />
-            <scale x="{scale}" y="{scale}" z="{scale}" />
+            <scale x="{1}" y="{1}" z="{1}" />
         </transform>
         <models>
             <model file="solarSystem/{name}.3d" />
@@ -126,7 +134,7 @@ def generateTransformations(name,distance,torus, scale):
         <group>
             <transform>
                 <translate x="{distance}" y="0" z="0" />
-                <scale x="{scale}" y="{scale}" z="{scale}" />
+                <scale x="{1}" y="{1}" z="{1}" />
                 <rotate angle="60" x="1" y="0" z="0" />
                 <rotate angle="40" x="0" y="0" z="1" />
             </transform>
@@ -144,7 +152,8 @@ def generateRing(outer_r, inner_r):
     if "generator" in os.listdir():
         if "solarSystem" not in os.listdir("../3d/"):
             os.system("mkdir ../3d/solarSystem")
-        command = "./generator torus 20 5 0.5 30 30 ../3d/solarSystem/torus.3d"
+        
+        command = f"./generator torus {outer_r} {inner_r} 0.5 30 30 ../3d/solarSystem/torus.3d"
         os.system(command)
     else:
         if "generator.cpp" in os.listdir():

@@ -99,6 +99,8 @@ void processSpecialKeys(int key, int xx, int yy){
     }else if(key == GLUT_KEY_RIGHT){
         scene.camera.lookAt.x += 1;
     }
+
+    glutPostRedisplay();
 }
 
 
@@ -141,7 +143,7 @@ int drawObj(std::string filename, int buffer){
                 flag=1;
             }
             else if (std::strcmp(line[0],"v")!=0 && flag==1) {
-                break
+                break;
             }
 
             str = "";
@@ -254,7 +256,7 @@ void renderScene(){
     //draw objects
     glPolygonMode(GL_FRONT,GL_LINE);
     
-    //drawAxis();
+    drawAxis();
 
     glRotatef(yawAngle, 0, 1, 0);
     glRotatef(pitchAngle,1,0,1);
@@ -275,8 +277,6 @@ void renderScene(){
 
         glPopMatrix();
     }
-
-    glutPostRedisplay();
 
     frames++;
     time_passed = glutGet(GLUT_ELAPSED_TIME);
