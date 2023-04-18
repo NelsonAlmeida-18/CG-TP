@@ -122,7 +122,7 @@ int drawObj(std::string filename, int buffer){
         int numVertices = 0;
 
         std::vector<float> vectorBuffer;
-        
+        int flag=0;
         int pos=0;
         while(getline(file3d, str)){
             
@@ -138,9 +138,10 @@ int drawObj(std::string filename, int buffer){
                 vectorBuffer.push_back(atof(line[2]));
                 vectorBuffer.push_back(atof(line[3]));
                 pos+=3;
+                flag=1;
             }
-            else{
-                break;
+            else if (std::strcmp(line[0],"v")!=0 && flag==1) {
+                break
             }
 
             str = "";
