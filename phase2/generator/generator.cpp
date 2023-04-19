@@ -383,6 +383,7 @@ int main(int argc, char **argv){
         if(strcmp(argv[1], "torus")==0){
             generateTorus(std::stof(argv[2]), std::stof(argv[3]),std::atoi(argv[4]),std::atoi(argv[5]), std::atoi(argv[6]));
             filepath=argv[7];
+            printf("%s", filepath);
         }
     }
     catch(...){
