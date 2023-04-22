@@ -89,6 +89,9 @@ void readSubgroupsXML(tinyxml2::XMLElement *subgroupXML, std::vector<DrawModel> 
                 DrawModel drawModel;
                 Model model;
                 model.model_file = modelXML->Attribute("file");
+                if(modelXML->Attribute("mass")){
+                    model.mass = atof(modelXML->Attribute("mass"));
+                }
                 XMLElement *texture = modelXML->FirstChildElement("texture");
                 if(texture){
                     model.texture_file = texture->Attribute("file");
@@ -213,6 +216,9 @@ void readGroupXML(tinyxml2::XMLElement *groupXML, std::vector<DrawModel> &sceneD
             DrawModel drawModel;
             Model model;
             model.model_file = modelXML->Attribute("file");
+            if(modelXML->Attribute("mass")){
+                model.mass = atof(modelXML->Attribute("mass"));
+            }
             XMLElement *texture = modelXML->FirstChildElement("texture");
             if(texture){
                 model.texture_file = texture->Attribute("file");

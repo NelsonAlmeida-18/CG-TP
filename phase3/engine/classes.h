@@ -96,6 +96,7 @@ struct Model{
     float shininess = 0.0;
     std::string texture_file;
     std::string model_file;
+    float mass;
 };
 
 
@@ -165,12 +166,16 @@ class TranslateCurve : public Transform{
     std::vector<Point> points;
     float time;
     bool align;
+    float y_prev[3];
 
     public:
         TranslateCurve(float time, bool align, std::vector<Point> points){
             this->time = time;
             this->align = align;
             this->points = points;
+            this->y_prev[0] = 0;
+            this->y_prev[1] = 1;
+            this->y_prev[2] = 0;
         }
 
         bool getAlign(){
@@ -190,9 +195,7 @@ class TranslateCurve : public Transform{
         float getZ(){return 0;}
         float getAngle(){return 0;}
 
-        void execute(){
-
-        }
+        void execute();
 };
 
 
