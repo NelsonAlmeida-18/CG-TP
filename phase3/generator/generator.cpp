@@ -315,6 +315,45 @@ void generateSphere(float radius, int slices, int stacks){
 }
 
 
+void generateTorus(float outer_r, float inner_r, float ratio, int slices, int stacks){
+    printf("Generating Torus");
+    float angleFace = (2 * M_PI) / stacks;
+    float angleBase = (2 * M_PI) / slices;
+    int numOfPoints = (slices+2*stacks*slices)*3;
+
+    buffer << numOfPoints << '\n';
+
+    point point1;
+    point point2;
+    point point3;
+    point point4;
+
+     for (int i=0;i<slices;i++){
+        for(int j=0;j<stacks;j++){
+            point1.setPoint((outer_r+inner_r*cos(j*angleFace))*cos(i*angleBase), (outer_r+inner_r*cos(j*angleFace))*sin(i*angleBase), ratio*inner_r*sin(j*angleFace));
+            
+            point2.setPoint((outer_r+inner_r*cos((j+1)*angleFace))*cos(i*angleBase), (outer_r+inner_r*cos((j+1)*angleFace))*sin(i*angleBase), ratio*inner_r*sin((j+1)*angleFace));
+            
+            point3.setPoint((outer_r+inner_r*cos((j+1)*angleFace))*cos((i+1)*angleBase), (outer_r+inner_r*cos((j+1)*angleFace))*sin((i+1)*angleBase), ratio*inner_r*sin((j+1)*angleFace));
+            
+            buffer << point1.pointCoords() << '\n';
+            buffer << point2.pointCoords() << '\n';
+            buffer << point3.pointCoords() << '\n';
+            
+            point1.setPoint((outer_r+inner_r*cos(j*angleFace))*cos(i*angleBase), (outer_r+inner_r*cos(j*angleFace))*sin(i*angleBase), ratio*inner_r*sin(j*angleFace));
+            
+            point2.setPoint((outer_r+inner_r*cos((j+1)*angleFace))*cos((i+1)*angleBase), (outer_r+inner_r*cos((j+1)*angleFace))*sin((i+1)*angleBase), ratio*inner_r*sin((j+1)*angleFace));
+            
+            point3.setPoint((outer_r+inner_r*cos(j*angleFace))*cos((i+1)*angleBase), (outer_r+inner_r*cos(j*angleFace))*sin((i+1)*angleBase), ratio*inner_r*sin(j*angleFace));
+            
+            buffer << point1.pointCoords() << '\n';
+            buffer << point2.pointCoords() << '\n';
+            buffer << point3.pointCoords() << '\n';
+        }
+    }
+}
+
+
 int main(int argc, char **argv){
     ofstream file;
     char* filepath;
@@ -340,6 +379,13 @@ int main(int argc, char **argv){
             generateCone(std::stof(argv[2]), std::stof(argv[3]),std::atoi(argv[4]),std::atoi(argv[5]));
             filepath=argv[6];
         }
+
+        if(strcmp(argv[1], "torus")==0){
+            generateTorus(std::stof(argv[2]), std::stof(argv[3]),std::atoi(argv[4]),std::atoi(argv[5]), std::atoi(argv[6]));
+            filepath=argv[7];
+            printf("%s", filepath);
+        }
+        
     }
     catch(...){
         std::cout << "\0Not enough arguments\n\0";

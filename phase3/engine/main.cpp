@@ -89,6 +89,21 @@ void youSpinMyHead(int button, int state, int x, int y){
 }
 
 
+void processSpecialKeys(int key, int xx, int yy){
+    if(key == GLUT_KEY_UP){
+        scene.camera.lookAt.y += 1;
+    }else if(key == GLUT_KEY_DOWN){
+        scene.camera.lookAt.y -= 1;
+    }else if(key == GLUT_KEY_LEFT){
+        scene.camera.lookAt.x -= 1;
+    }else if(key == GLUT_KEY_RIGHT){
+        scene.camera.lookAt.x += 1;
+    }
+
+    glutPostRedisplay();
+}
+
+
 void tokenize(std::string const &str, const char* delim, std::vector<float> &out){ 
 
     char *token = strtok(const_cast<char*>(str.c_str()), delim); 
@@ -96,6 +111,56 @@ void tokenize(std::string const &str, const char* delim, std::vector<float> &out
         out.push_back(atof(token)); 
         token = strtok(nullptr, delim); 
     }
+}
+
+
+int drawObj(std::string filename, int buffer){
+    std::string str;
+    filename = "../../3d/" + filename;
+    std::ifstream file3d(filename);
+
+    const char* delim = " ";
+    if (file3d.is_open()){
+               getline(file3d,str);
+        int numVertices = 0;
+
+        std::vector<float> vectorBuffer;
+        int flag=0;
+        int pos=0;
+        while(getline(file3d, str)){
+            
+            std::vector<char*> line;
+            char *token = strtok(const_cast<char*>(str.c_str()), delim);
+            while (token != nullptr){
+                line.push_back(token);
+                token = strtok(nullptr, delim);
+            }
+
+            if (std::strcmp(line[0],"v")==0){
+                vectorBuffer.push_back(atof(line[1]));
+                vectorBuffer.push_back(atof(line[2]));
+                vectorBuffer.push_back(atof(line[3]));
+                pos+=3;
+                flag=1;
+            }
+            else if (std::strcmp(line[0],"v")!=0 && flag==1) {
+                break;
+            }
+
+            str = "";
+        }
+
+        file3d.close();
+        
+        glBindBuffer(GL_ARRAY_BUFFER, buffers[buffer]);
+        glBufferData(GL_ARRAY_BUFFER, vectorBuffer.size()*sizeof(float),vectorBuffer.data(),GL_STATIC_DRAW);
+        return vectorBuffer.size();
+    }
+    else{
+        std::cout << "Could not open file: " << filename << "\n\0";
+        exit(1);
+    }
+    return 0;
 }
 
 
@@ -143,7 +208,14 @@ std::vector<int> drawModels(){
     std::vector<int> numVertices;
     
     for(int i = 0; i < size; i++){
-        numVertices.push_back(drawFigure(scene.drawModels[i].model.model_file, i));
+
+        std::string filename = scene.drawModels[i].model.model_file;
+        if (filename.size() >= 4 && filename.substr(filename.size() - 4) == ".obj") {
+            numVertices.push_back(drawObj(filename, i));
+        }
+        else{
+            numVertices.push_back(drawFigure(scene.drawModels[i].model.model_file, i));
+        }
     }
     
     return numVertices;
@@ -191,7 +263,7 @@ void renderScene(){
     glRotatef(yawAngle, 0, 1, 0);
     glRotatef(pitchAngle,1,0,0);
 
-    /*numVertices = drawModels();
+    numVertices = drawModels();
 
     for(int i=0; i<scene.drawModels.size(); i++){
         glPushMatrix();
@@ -206,7 +278,7 @@ void renderScene(){
         glDrawArrays(GL_TRIANGLES, 0, numVertices[i]/3);
 
         glPopMatrix();
-    }*/
+    }
 
     glutPostRedisplay();
 
@@ -224,11 +296,6 @@ void renderScene(){
 
     //end of frame
     glutSwapBuffers();
-}
-
-
-void genVbos(){
-
 }
 
 
@@ -257,13 +324,17 @@ int main(int argc, char **argv){
     glutDisplayFunc(renderScene);
     glutReshapeFunc(changeSize);
     glutMouseFunc(youSpinMyHead);
+    glutSpecialFunc(processSpecialKeys);
 
     //OpenGL settings
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    glewInit();
+    #ifndef __APPLE__
+        glewInit();
+    #endif
+
     glEnableClientState(GL_VERTEX_ARRAY); // para aceitar os arrays de vértices para a otimização
     glGenBuffers(scene.drawModels.size(), buffers);
 
