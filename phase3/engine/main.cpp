@@ -256,7 +256,7 @@ void renderScene(){
               scene.camera.up.x, scene.camera.up.y, scene.camera.up.z);
 
     //draw objects
-    glPolygonMode(GL_FRONT,GL_LINE);
+    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
     
     drawAxis();
 
@@ -279,8 +279,6 @@ void renderScene(){
 
         glPopMatrix();
     }
-
-    glutPostRedisplay();
 
     frames++;
     time_passed = glutGet(GLUT_ELAPSED_TIME);
@@ -329,7 +327,7 @@ int main(int argc, char **argv){
     //OpenGL settings
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    //glCullFace(GL_BACK);
 
     #ifndef __APPLE__
         glewInit();

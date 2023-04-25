@@ -117,12 +117,12 @@ void generateBox(float length, int divisions) {
 
             
             //upper triangle
-            buffer << point2.pointCoords() << '\n';
             buffer << point1.pointCoords() << '\n';
+            buffer << point2.pointCoords() << '\n';
             buffer << point3.pointCoords() << '\n';
             //lower triangle
-            buffer << point1.pointCoords() << '\n';
             buffer << point4.pointCoords() << '\n';
+            buffer << point1.pointCoords() << '\n';
             buffer << point3.pointCoords() << '\n';
 
             // Top Face
@@ -133,12 +133,12 @@ void generateBox(float length, int divisions) {
 
             // Write point to buffer
             //upper triangle
-            buffer << point5.pointCoords() << '\n';
             buffer << point6.pointCoords() << '\n';
+            buffer << point5.pointCoords() << '\n';
             buffer << point7.pointCoords() << '\n';
             //lower triangle
-            buffer << point8.pointCoords() << '\n';
             buffer << point5.pointCoords() << '\n';
+            buffer << point8.pointCoords() << '\n';
             buffer << point7.pointCoords() << '\n';
 
 
@@ -154,12 +154,12 @@ void generateBox(float length, int divisions) {
             point4.setPoint(-initX, initY - (j + 1) * edgeIncrement, initZ - (i + 1) * edgeIncrement);
 
                //upper triangle
-            buffer << point2.pointCoords() << '\n';
             buffer << point1.pointCoords() << '\n';
+            buffer << point2.pointCoords() << '\n';
             buffer << point3.pointCoords() << '\n';
             //lower triangle
-            buffer << point1.pointCoords() << '\n';
             buffer << point4.pointCoords() << '\n';
+            buffer << point1.pointCoords() << '\n';
             buffer << point3.pointCoords() << '\n';
 
 
@@ -175,8 +175,8 @@ void generateBox(float length, int divisions) {
             buffer << point6.pointCoords() << '\n';
             buffer << point7.pointCoords() << '\n';
             //lower triangle
-            buffer << point8.pointCoords() << '\n';
             buffer << point5.pointCoords() << '\n';
+            buffer << point8.pointCoords() << '\n';
             buffer << point7.pointCoords() << '\n';
         }
     }
@@ -241,8 +241,8 @@ void generateCone(float radius, float height, int slices, int stacks) {
         point2.setPoint(cos(angleStep*i)*radius, 0, sin(angleStep*i)*radius);
         point3.setPoint(cos(angleStep*(i+1))*radius, 0, sin(angleStep*(i+1))*radius);
         
-            buffer << point2.pointCoords() << '\n';
             buffer << point1.pointCoords() << '\n';
+            buffer << point2.pointCoords() << '\n';
             buffer << point3.pointCoords() << '\n';
     }
     
@@ -259,12 +259,12 @@ void generateCone(float radius, float height, int slices, int stacks) {
 
             point4.setPoint(radius * cos(angle) * (1 - nextHeight / height), nextHeight, radius * sin(angle) * (1 - nextHeight / height));
 
-            buffer << point1.pointCoords() << '\n';
             buffer << point2.pointCoords() << '\n';
+            buffer << point1.pointCoords() << '\n';
             buffer << point3.pointCoords() << '\n';
 
-            buffer << point4.pointCoords() << '\n';
             buffer << point1.pointCoords() << '\n';
+            buffer << point4.pointCoords() << '\n';
             buffer << point2.pointCoords() << '\n';
         }
     }
@@ -383,7 +383,6 @@ int main(int argc, char **argv){
         if(strcmp(argv[1], "torus")==0){
             generateTorus(std::stof(argv[2]), std::stof(argv[3]),std::atoi(argv[4]),std::atoi(argv[5]), std::atoi(argv[6]));
             filepath=argv[7];
-            printf("%s", filepath);
         }
         
     }

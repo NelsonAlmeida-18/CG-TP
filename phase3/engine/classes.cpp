@@ -1,5 +1,7 @@
+#include <stdlib.h>
 #include "classes.h"
 #include <math.h>
+#include <string.h>
 
 
 void buildRotMatrix(float *x, float *y, float *z, float *m) {
@@ -35,12 +37,12 @@ float length(float *v) {
 
 }
 
-void multMatrixVector(float m[4][4], float *v, float *res) {
+void multMatrixVector(float *m, float *v, float *res) {
 
 	for (int j = 0; j < 4; ++j) {
 		res[j] = 0;
 		for (int k = 0; k < 4; ++k) {
-			res[j] += v[k] * m[j][k];
+			res[j] += v[k] * m[j*4+k];
 		}
 	}
 
@@ -57,46 +59,53 @@ void getCatmullRomPoint(float t, float *p0, float *p1, float *p2, float *p3, flo
 
 	// Compute A = M * P
 	for(int i = 0; i < 3; i++){
-		float p[4] = {p0[i], p1[i], p2[i], p3[i]};
+		float point[4] = {p0[i], p1[i], p2[i], p3[i]};
 		float a[4];
 
-		multMatrixVector(m, p, a);
+		multMatrixVector((float *) m, point, a);
 		
 		// Compute pos = T * A
+		pos[i] = 0;
 		float T[4] = {powf(t, 3.0), powf(t, 2.0), t, 1.0};
 		for(int j = 0; j < 4; j++){
 			pos[i] += T[j]*a[j];
 		}
 		
 		// compute deriv = T' * A
-		float T_deriv[4] = {3*powf(t, 2.0), 2*t, 1, 0};
+		deriv[i] = 0;
+		float t_deriv[4] = {3*powf(t, 2.0), 2*t, 1, 0};
 		for(int j = 0; j < 4; j++){
-			deriv[i] += T_deriv[j]*a[j];
+			deriv[i] += t_deriv[j]*a[j];
 		}
 	}
-
-	// ...
 }
 
 
-void getGlobalCatmullRomPoint(float gt, float *pos, float *deriv) {
-
-	float t = gt * POINT_COUNT; // this is the real global t
+void getGlobalCatmullRomPoint(float gt, float *pos, float *deriv, std::vector<Point> points) {
+	int num_points = points.size();
+	float p[num_points][3];
+	float t = gt * num_points; // this is the real global t
 	int index = floor(t);  // which segment
 	t = t - index; // where within  the segment
 
+	for(int i = 0; i < num_points; i++){
+		p[i][0] = points[i].x;
+		p[i][1] = points[i].y;
+		p[i][2] = points[i].z;
+	}
+
 	// indices store the points
 	int indices[4]; 
-	indices[0] = (index + POINT_COUNT-1)%POINT_COUNT;	
-	indices[1] = (indices[0]+1)%POINT_COUNT;
-	indices[2] = (indices[1]+1)%POINT_COUNT; 
-	indices[3] = (indices[2]+1)%POINT_COUNT;
+	indices[0] = (index + num_points-1)%num_points;	
+	indices[1] = (indices[0]+1)%num_points;
+	indices[2] = (indices[1]+1)%num_points; 
+	indices[3] = (indices[2]+1)%num_points;
 
 	getCatmullRomPoint(t, p[indices[0]], p[indices[1]], p[indices[2]], p[indices[3]], pos, deriv);
 }
 
 
-void renderCatmullRomCurve() {
+void renderCatmullRomCurve(std::vector<Point> points) {
 
 // draw curve using line segments with GL_LINE_LOOP
 	float point[3];
@@ -105,7 +114,7 @@ void renderCatmullRomCurve() {
 	glBegin(GL_LINE_LOOP);
 
 	for(float gt = 0; gt < 1; gt += 0.01){
-		getGlobalCatmullRomPoint(gt, point, point_deriv);
+		getGlobalCatmullRomPoint(gt, point, point_deriv, points);
 		glVertex3f(point[0], point[1], point[2]);
 	}
 	glEnd();
@@ -113,5 +122,34 @@ void renderCatmullRomCurve() {
 
 
 void TranslateCurve::execute(){
+	float pos[3], pos_deriv[3];
 
+	renderCatmullRomCurve(this->points);
+	getGlobalCatmullRomPoint(this->t, pos, pos_deriv, this->points);
+	
+	glTranslatef(pos[0], pos[1], pos[2]);
+
+	if(this->align){
+		float x[3] = {pos_deriv[0], pos_deriv[1], pos_deriv[2]};
+		float y[3], z[3];
+
+		normalize(x);
+		cross(x, this->y_prev, z);
+		normalize(z);
+		cross(z, x, y);
+
+		for(int i = 0; i < 3; i++){
+			this->y_prev[i] = y[i];
+		}
+
+		float m[16];
+		buildRotMatrix(x, y, z, m);
+		glMultMatrixf(m);
+	}
+
+	float elapsed_time = glutGet(GLUT_ELAPSED_TIME);
+	float interval = elapsed_time - this->time_checkpoint;
+
+	this->time_checkpoint = elapsed_time;
+	this->t += interval/this->time;
 }

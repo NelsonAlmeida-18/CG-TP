@@ -162,20 +162,31 @@ class Translate : public Transform{
 };
 
 
+void buildRotMatrix(float *x, float *y, float *z, float *m);
+void cross(float *a, float *b, float *res);
+void normalize(float *a);
+float length(float *v);
+void multMatrixVector(float *m, float *v, float *res);
+void getCatmullRomPoint(float t, float *p0, float *p1, float *p2, float *p3, float *pos, float *deriv);
+void getGlobalCatmullRomPoint(float gt, float *pos, float *deriv, std::vector<Point> points);
+void renderCatmullRomCurve(std::vector<Point> points);
+
 class TranslateCurve : public Transform{
     std::vector<Point> points;
-    float time;
+    float time, t, time_checkpoint;
     bool align;
     float y_prev[3];
 
     public:
         TranslateCurve(float time, bool align, std::vector<Point> points){
-            this->time = time;
+            this->t = 0;
+            this->time = time*1000;
             this->align = align;
             this->points = points;
             this->y_prev[0] = 0;
             this->y_prev[1] = 1;
             this->y_prev[2] = 0;
+            this->time_checkpoint = 0;
         }
 
         bool getAlign(){
@@ -254,7 +265,7 @@ class RotateTime : public Transform{
         }
 
         void execute(){
-            glRotatef(glutGet(GLUT_ELAPSED_TIME)*360/this->time, this->x, this->y, this->z);
+            glRotatef((glutGet(GLUT_ELAPSED_TIME)*360/this->time), this->x, this->y, this->z);
         }
 
         float getX(){
