@@ -258,7 +258,7 @@ class RotateTime : public Transform{
 
     public:
         RotateTime(float time, float x, float y, float z){
-            this->time = time;
+            this->time = time*1000;
             this->x = x;
             this->y = y;
             this->z = z;

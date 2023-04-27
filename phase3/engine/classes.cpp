@@ -151,5 +151,6 @@ void TranslateCurve::execute(){
 	float interval = elapsed_time - this->time_checkpoint;
 
 	this->time_checkpoint = elapsed_time;
-	this->t += interval/this->time;
+	this->t += interval/(this->time);
+	
 }
