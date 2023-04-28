@@ -5,6 +5,8 @@
 #include <sstream>
 #include <cmath>
 #include <math.h>
+#include <string.h>
+#include <vector>
 
 using namespace std;
 
@@ -354,6 +356,149 @@ void generateTorus(float outer_r, float inner_r, float ratio, int slices, int st
 }
 
 
+void tokenize(std::string const &str, const char* delim, std::vector<int> &out){ 
+
+    char *token = strtok(const_cast<char*>(str.c_str()), delim); 
+    while (token != nullptr){ 
+        out.push_back(atof(token)); 
+        token = strtok(nullptr, delim); 
+    }
+}
+
+
+void multMatrixMatrix(float m1[4][4], float m2[4][4], float res[4][4]){
+
+    for(int i = 0; i < 4; i++){
+        for(int j = 0; j < 4; j++){
+            res[i][j] = 0;
+            for(int k = 0; k < 4; k++)
+                res[i][j] += m1[i][k] * m2[k][j];
+        }
+    }
+}
+
+
+void multMatrixVector(float *m, float *v, float *res) {
+
+	for (int j = 0; j < 4; ++j) {
+		res[j] = 0;
+		for (int k = 0; k < 4; ++k) {
+			res[j] += v[k] * m[j*4+k];
+		}
+	}
+}
+
+
+float calculateB(float u, float v, float m[4][4]){
+
+    float V[4] = {powf(v, 3), powf(v, 2), v, 1};
+    float U[4] = {powf(u, 3), powf(u, 2), u, 1};
+
+    float temp[4];
+    multMatrixVector((float *) m, U, temp);
+    
+    float result = 0;
+    for(int i = 0; i < 4; i++){
+        result += temp[i]*V[i];
+    }
+
+    return result;
+}
+
+
+void generatePatch(const char *file, float tesselation_level){
+    std::string filename(file);
+    std::ifstream patchfile(filename);
+    std::vector<std::vector<int>> patches;
+    int num_of_patches;
+    int num_of_points;
+    std::vector<point> control_points;
+
+    float M[4][4] = {{-1.0f, 3.0f, -3.0f, 1.0f},
+                     {3.0f, -6.0f, 3.0f, 0.0f},
+                     {-3.0f, 3.0f, 0.0f, 0.0f},
+                     {1.0f, 0.0f, 0.0f, 0.0f}};
+
+    if(patchfile.is_open()){
+        int total = tesselation_level*tesselation_level;
+
+        std::string str;
+        getline(patchfile, str);
+        num_of_patches = std::atoi(str.c_str());
+        const char* delim = ", ";
+        total *= num_of_patches*6;
+        buffer << total << "\n";
+
+        while(num_of_patches > 0){
+            getline(patchfile, str);
+            std::vector<int> temp;
+            tokenize(str, delim, temp);
+            patches.push_back(temp);
+            num_of_patches--;
+        }
+
+        getline(patchfile, str);
+        num_of_points = std::atoi(str.c_str());
+        
+        while(num_of_points > 0){
+            getline(patchfile, str);
+            std::vector<float> temp;
+
+            char *token = strtok(const_cast<char*>(str.c_str()), delim);
+            while(token != nullptr){
+                temp.push_back(atof(token));
+                token = strtok(nullptr, delim);
+            }
+
+            point p;
+            p.setPoint(temp[0], temp[1], temp[2]);
+            control_points.push_back(p);
+            num_of_points--;
+        }
+
+        float mx[4][4], my[4][4], mz[4][4];
+
+        for(std::vector<int> indexes : patches){
+            float temp[4][4];
+
+            for(int i = 0; i < 4; i++){
+                for(int j = 0; j < 4; j++){
+                    mx[i][j] = control_points[indexes[i*4+j]].x;
+                    my[i][j] = control_points[indexes[i*4+j]].y;
+                    mz[i][j] = control_points[indexes[i*4+j]].z;
+                }
+            }
+
+            //M * x/y/z * M^T
+            multMatrixMatrix(M, mx, temp);
+            multMatrixMatrix(temp, M, mx);
+
+            multMatrixMatrix(M, my, temp);
+            multMatrixMatrix(temp, M, my);
+
+            multMatrixMatrix(M, mz, temp);
+            multMatrixMatrix(temp, M, mz);
+
+            point p1, p2, p3, p4;
+            float tesselation = 1/tesselation_level;
+            for(float i = 0; i < 1; i += tesselation){
+                for(float j = 0; j < 1; j += tesselation){
+                    p1.setPoint(calculateB(i, j, mx), calculateB(i, j, my), calculateB(i, j, mz));
+                    
+                    p2.setPoint(calculateB(i+tesselation, j, mx), calculateB(i+tesselation, j, my), calculateB(i+tesselation, j, mz));
+
+                    p3.setPoint(calculateB(i, j+tesselation, mx), calculateB(i, j+tesselation, my), calculateB(i, j+tesselation, mz));
+
+                    buffer << p1.pointCoords() << "\n";
+                    buffer << p2.pointCoords() << "\n";
+                    buffer << p3.pointCoords() << "\n";
+                }
+            }
+        }
+    }
+}
+
+
 int main(int argc, char **argv){
     ofstream file;
     char* filepath;
@@ -383,6 +528,11 @@ int main(int argc, char **argv){
         if(strcmp(argv[1], "torus")==0){
             generateTorus(std::stof(argv[2]), std::stof(argv[3]),std::atoi(argv[4]),std::atoi(argv[5]), std::atoi(argv[6]));
             filepath=argv[7];
+        }
+
+        if(strcmp(argv[1], "patch")==0){
+            generatePatch(argv[2], std::atof(argv[3]));
+            filepath = argv[4];
         }
         
     }

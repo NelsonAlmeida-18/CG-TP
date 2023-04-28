@@ -171,7 +171,7 @@ int drawFigure(std::string filename, int buffer){
 
     const char* delim = " ";
     if (file3d.is_open()){
-               getline(file3d,str);
+        getline(file3d,str);
         int numVertices = std::atoi(str.c_str());
 
         float* vertexBuffer = (float*)malloc(numVertices*3*sizeof(float));
@@ -279,6 +279,8 @@ void renderScene(){
 
         glPopMatrix();
     }
+
+    glutPostRedisplay();
 
     frames++;
     time_passed = glutGet(GLUT_ELAPSED_TIME);
