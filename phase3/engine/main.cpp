@@ -267,7 +267,7 @@ void renderScene(){
 
     for(int i=0; i<scene.drawModels.size(); i++){
         glPushMatrix();
-        
+                
         for(Transform *t : scene.drawModels[i].transformations){
             t->execute();
         }

@@ -121,8 +121,12 @@ void readSubgroupsXML(tinyxml2::XMLElement *subgroupXML, std::vector<DrawModel> 
             }
         }
         
-        if(subgroupXML->FirstChildElement("group")){
-            readSubgroupsXML(subgroupXML->FirstChildElement("group"), sceneDrawModels, transf);
+        XMLElement *sub = subgroupXML->FirstChildElement("group");
+        if(sub){
+            while(sub){
+                readSubgroupsXML(sub, sceneDrawModels, transf);
+                sub = sub->NextSiblingElement("group");
+            }
         }else{
             while(n > 0){
                 transf.pop_back();
@@ -139,6 +143,7 @@ void readGroupXML(tinyxml2::XMLElement *groupXML, std::vector<DrawModel> &sceneD
     using namespace tinyxml2;
 
     //TRANSFORM
+    int n = 0;
     XMLElement *transformXML = groupXML->FirstChildElement("transform");
     std::vector<Transform*> transf;
     if(transformXML){
@@ -174,6 +179,7 @@ void readGroupXML(tinyxml2::XMLElement *groupXML, std::vector<DrawModel> &sceneD
 
                     transf.push_back(new Translate(x, y, z));
                 }
+                n++;
 
             }else if(name == "rotate"){
                 if(elem->Attribute("time")){
@@ -193,6 +199,7 @@ void readGroupXML(tinyxml2::XMLElement *groupXML, std::vector<DrawModel> &sceneD
 
                     transf.push_back(new Rotate(angle, x, y, z));
                 }
+                n++;
 
             }else if(name == "scale"){
                 float x, y, z;
@@ -201,6 +208,7 @@ void readGroupXML(tinyxml2::XMLElement *groupXML, std::vector<DrawModel> &sceneD
                 z = atof(elem->Attribute("z"));
 
                 transf.push_back(new Scale(x, y, z));
+                n++;
             }
 
             elem = elem->NextSiblingElement();
@@ -249,8 +257,8 @@ void readGroupXML(tinyxml2::XMLElement *groupXML, std::vector<DrawModel> &sceneD
         }
     }
     
-    if(groupXML->FirstChildElement("group")){
-        XMLElement *subgroup = groupXML->FirstChildElement("group");
+    XMLElement *subgroup = groupXML->FirstChildElement("group");
+    if(subgroup){
         readSubgroupsXML(subgroup, sceneDrawModels, transf);
     }
 }
