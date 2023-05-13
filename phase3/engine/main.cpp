@@ -325,6 +325,7 @@ int main(int argc, char **argv){
     glutReshapeFunc(changeSize);
     glutMouseFunc(youSpinMyHead);
     glutSpecialFunc(processSpecialKeys);
+    glutKeyboardFunc(processNormalKeys);
 
     //OpenGL settings
     glEnable(GL_DEPTH_TEST);

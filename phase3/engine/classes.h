@@ -338,3 +338,5 @@ struct Scene{
     std::vector<Light> lights;
     std::vector<DrawModel> drawModels;
 };
+
+void processNormalKeys(unsigned char key, int x, int y);

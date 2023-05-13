@@ -1,7 +1,22 @@
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#else
+#include <GL/glut.h>
+#endif
+
 #include <stdlib.h>
 #include "classes.h"
 #include <math.h>
 #include <string.h>
+
+
+bool renderCurve = true;
+
+void processNormalKeys(unsigned char key, int x, int y){
+	if(key == 99 || key == 67){
+		renderCurve = !renderCurve;
+	}
+}
 
 
 void buildRotMatrix(float *x, float *y, float *z, float *m) {
@@ -124,7 +139,10 @@ void renderCatmullRomCurve(std::vector<Point> points) {
 void TranslateCurve::execute(){
 	float pos[3], pos_deriv[3];
 
-	//renderCatmullRomCurve(this->points);
+	if(renderCurve){
+		renderCatmullRomCurve(this->points);
+	}
+	
 	getGlobalCatmullRomPoint(this->t, pos, pos_deriv, this->points);
 	
 	glTranslatef(pos[0], pos[1], pos[2]);
