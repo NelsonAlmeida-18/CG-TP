@@ -5,6 +5,99 @@ import os
 distanceScale = 1e-6
 planetScale = 1e-3
 auScale = 6.68458712e-9
+planets = [
+    {
+        'name': 'Sun',
+        'mass': 1.989e30,     # kg
+        'radius': 695508,     # km
+        'distance': 0         # km
+    },
+    {
+        'name': 'Mercury',
+        'mass': 3.3011e23,
+        'radius': 2439.7,
+        'distance': 57909100,
+        'semi_major': 57909050,
+        'semi_minor': 57800000,
+        'time': 88,
+        'rotatetime': 58.646,
+        'anti_hour': 1
+    },
+    {
+        'name': 'Venus',
+        'mass': 4.8675e24,
+        'radius': 6051.8,
+        'distance': 108208000,
+        'semi_major': 108.208e6,
+        'semi_minor': 108.1e6,
+        'time': 225,
+        'rotatetime': 243,
+        'anti_hour': 0
+    },
+    {
+        'name': 'Earth',
+        'mass': 5.9724e24,
+        'radius': 6371,
+        'distance': 149598261,
+        'semi_major': 149597887,
+        'semi_minor': 149576999,
+        'time': 365,
+        'rotatetime': 1,
+        'anti_hour': 1
+    },
+    {
+        'name': 'Mars',
+        'mass': 6.4171e23,
+        'radius': 3389.5,
+        'distance': 227943824,
+        'semi_major': 227.9e6,
+        'semi_minor': 226957353,
+        'time': 686,
+        'rotatetime': 1.03,
+        'anti_hour': 1
+    },
+    {
+        'name': 'Jupiter',
+        'mass': 1.8982e27,
+        'radius': 69911,
+        'distance': 778340821,
+        'semi_major': 778.479e6,
+        'semi_minor': 777e6,
+        'time': 4329,
+        'rotatetime': 0.398,
+        'anti_hour': 1
+    },
+    {
+        'name': 'Saturn',
+        'mass': 5.6834e26,
+        'radius': 58232,
+        'distance': 1426666422,
+        'semi_major': 1433.53e6,
+        'semi_minor': 1423e6,
+        'time': 10753,
+        'rotatetime': 0.43
+    },
+    {
+        'name': 'Uranus',
+        'mass': 8.6810e25,
+        'radius': 25362,
+        'distance': 2870658186,
+        'semi_major': 2867.043e6,
+        'semi_minor': 2850e6,
+        'time': 30660,
+        'rotatetime': 0.714
+    },
+    {
+        'name': 'Neptune',
+        'mass': 1.0243e26,
+        'radius': 24622,
+        'distance': 4498396441,
+        'semi-major': 4500e6,
+        'semi-minor': 4200e6,
+        'time': 60152,
+        'rotatetime': 0.667
+    }
+]
 
 
 def solarSystemGenerator():
@@ -35,63 +128,7 @@ def solarSystemGenerator():
 
     finalXML = "    </group>\n</world>"
 
-    planets = [
-    {
-        'name': 'Sun',
-        'mass': 1.989e30,     # kg
-        'radius': 695508,     # km
-        'distance': 0         # km
-    },
-    {
-        'name': 'Mercury',
-        'mass': 3.3011e23,
-        'radius': 2439.7,
-        'distance': 57909100
-    },
-    {
-        'name': 'Venus',
-        'mass': 4.8675e24,
-        'radius': 6051.8,
-        'distance': 108208000
-    },
-    {
-        'name': 'Earth',
-        'mass': 5.9724e24,
-        'radius': 6371,
-        'distance': 149598261
-    },
-    {
-        'name': 'Mars',
-        'mass': 6.4171e23,
-        'radius': 3389.5,
-        'distance': 227943824
-    },
-    {
-        'name': 'Jupiter',
-        'mass': 1.8982e27,
-        'radius': 69911,
-        'distance': 778340821
-    },
-    {
-        'name': 'Saturn',
-        'mass': 5.6834e26,
-        'radius': 58232,
-        'distance': 1426666422
-    },
-    {
-        'name': 'Uranus',
-        'mass': 8.6810e25,
-        'radius': 25362,
-        'distance': 2870658186
-    },
-    {
-        'name': 'Neptune',
-        'mass': 1.0243e26,
-        'radius': 24622,
-        'distance': 4498396441
-    }
-    ]
-
+   
 
     for x in planets:
         #if x["name"] == "Saturn":
@@ -116,12 +153,75 @@ def solarSystemGenerator():
     print("Solar system generated!")
 
 
-def generateTransformations(name,distance,torus, scale):
+def getElipsePoints(name, distance, time):
+    string = ""
+
+    b = distance
+    a = b*0.7071
+
+    string += f"""
+    <transform>
+        <translate time = '{time}' align = 'true'>
+            <point x="{a}" y="0" z="{a}"/>
+            <point x="0" y="0" z="{b}"/>
+            <point x="-{a}" y="0" z="{a}"/>
+            <point x="-{b}" y="0" z="0"/>
+            <point x="-{a}" y="0" z="-{a}"/>
+            <point x="0" y="0" z="-{b}"/>
+            <point x="{a}" y="0" z="-{a}"/>
+            <point x="{b}" y="0" z="0"/>
+        </translate>
+    """
+    
+    return string
+
+
+def generateTransformations(name,distance,torus, scale, time, rotatetime):
+    template = ""
+
+    if name == "sun":
+        template += f"""
+        <group>
+            <models>
+                <model file='solarSystem/{name}.3d' />
+            </models>
+        </group>
+        """
+    elif torus:
+        template += "<group>"
+
+        template += getElipsePoints(name, distance, time)
+
+        template += f"<rotate time={rotatetime} x='0' y='' z='0' />"
+
+        template = f"""
+        <group>
+            <transform>
+                <translate x="{distance}" y="0" z="0" />
+            </transform>
+            <models>
+                <model file="solarSystem/{name}.3d" />
+            </models>
+        </group>
+        """
+
+        template += f"""
+        <group>
+            <transform>
+                <translate x="{distance}" y="0" z="0" />
+                <rotate angle="60" x="1" y="0" z="0" />
+                <rotate angle="40" x="0" y="0" z="1" />
+            </transform>
+            <models>
+                <model file="solarSystem/torus.3d" />
+            </models>
+        </group>
+        """
+
     template = f"""
     <group>
         <transform>
             <translate x="{distance}" y="0" z="0" />
-            <scale x="{1}" y="{1}" z="{1}" />
         </transform>
         <models>
             <model file="solarSystem/{name}.3d" />
@@ -134,7 +234,6 @@ def generateTransformations(name,distance,torus, scale):
         <group>
             <transform>
                 <translate x="{distance}" y="0" z="0" />
-                <scale x="{1}" y="{1}" z="{1}" />
                 <rotate angle="60" x="1" y="0" z="0" />
                 <rotate angle="40" x="0" y="0" z="1" />
             </transform>

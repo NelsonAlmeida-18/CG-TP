@@ -124,7 +124,7 @@ void renderCatmullRomCurve(std::vector<Point> points) {
 void TranslateCurve::execute(){
 	float pos[3], pos_deriv[3];
 
-	renderCatmullRomCurve(this->points);
+	//renderCatmullRomCurve(this->points);
 	getGlobalCatmullRomPoint(this->t, pos, pos_deriv, this->points);
 	
 	glTranslatef(pos[0], pos[1], pos[2]);
