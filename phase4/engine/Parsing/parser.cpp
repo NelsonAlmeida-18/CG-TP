@@ -98,20 +98,35 @@ void readSubgroupsXML(tinyxml2::XMLElement *subgroupXML, std::vector<DrawModel> 
                 }
 
                 XMLElement *color = modelXML->FirstChildElement("color");
+                float diffuser, diffuseg, diffuseb, ambientr, ambientg, ambientb, specularr, specularg, specularb, emissiver, emissiveg, emissiveb;
                 if(color){
-                    model.diffuse.r = atof(color->FirstChildElement("diffuse")->Attribute("R"));
-                    model.diffuse.g = atof(color->FirstChildElement("diffuse")->Attribute("G"));
-                    model.diffuse.b = atof(color->FirstChildElement("diffuse")->Attribute("B"));
-                    model.ambient.r = atof(color->FirstChildElement("ambient")->Attribute("R"));
-                    model.ambient.g = atof(color->FirstChildElement("ambient")->Attribute("G"));
-                    model.ambient.b = atof(color->FirstChildElement("ambient")->Attribute("B"));
-                    model.specular.r = atof(color->FirstChildElement("specular")->Attribute("R"));
-                    model.specular.g = atof(color->FirstChildElement("specular")->Attribute("G"));
-                    model.specular.b = atof(color->FirstChildElement("specular")->Attribute("B"));
-                    model.emissive.r = atof(color->FirstChildElement("emissive")->Attribute("R"));
-                    model.emissive.g = atof(color->FirstChildElement("emissive")->Attribute("G"));
-                    model.emissive.b = atof(color->FirstChildElement("emissive")->Attribute("B"));
-                    model.shininess = atof(color->FirstChildElement("shininess")->Attribute("value"));
+                    diffuser = atof(color->FirstChildElement("diffuse")->Attribute("R"));
+                    diffuseg = atof(color->FirstChildElement("diffuse")->Attribute("G"));
+                    diffuseb = atof(color->FirstChildElement("diffuse")->Attribute("B"));
+                    Diffuse *d = new Diffuse(diffuser, diffuseg, diffuseb);
+
+                    ambientr = atof(color->FirstChildElement("ambient")->Attribute("R"));
+                    ambientg = atof(color->FirstChildElement("ambient")->Attribute("G"));
+                    ambientb = atof(color->FirstChildElement("ambient")->Attribute("B"));
+                    Ambient *a = new Ambient(ambientr, ambientg, ambientb);
+
+                    specularr = atof(color->FirstChildElement("specular")->Attribute("R"));
+                    specularg = atof(color->FirstChildElement("specular")->Attribute("G"));
+                    specularb = atof(color->FirstChildElement("specular")->Attribute("B"));
+                    Specular *spec = new Specular(specularr, specularg, specularb);
+
+                    emissiver = atof(color->FirstChildElement("emissive")->Attribute("R"));
+                    emissiveg = atof(color->FirstChildElement("emissive")->Attribute("G"));
+                    emissiveb = atof(color->FirstChildElement("emissive")->Attribute("B"));
+                    Emissive *e = new Emissive(emissiver, emissiveg, emissiveb);
+
+                    Shininess *shine = new Shininess(atof(color->FirstChildElement("shininess")->Attribute("value")));
+
+                    model.diffuse = d;
+                    model.ambient = a;
+                    model.emissive = e;
+                    model.specular = spec;
+                    model.shininess = shine;
                 }
 
                 drawModel.model = model;
@@ -233,20 +248,35 @@ void readGroupXML(tinyxml2::XMLElement *groupXML, std::vector<DrawModel> &sceneD
             }
 
             XMLElement *color = modelXML->FirstChildElement("color");
+            float diffuser, diffuseg, diffuseb, ambientr, ambientg, ambientb, specularr, specularg, specularb, emissiver, emissiveg, emissiveb;
             if(color){
-                model.diffuse.r = atof(color->FirstChildElement("diffuse")->Attribute("R"));
-                model.diffuse.g = atof(color->FirstChildElement("diffuse")->Attribute("G"));
-                model.diffuse.b = atof(color->FirstChildElement("diffuse")->Attribute("B"));
-                model.ambient.r = atof(color->FirstChildElement("ambient")->Attribute("R"));
-                model.ambient.g = atof(color->FirstChildElement("ambient")->Attribute("G"));
-                model.ambient.b = atof(color->FirstChildElement("ambient")->Attribute("B"));
-                model.specular.r = atof(color->FirstChildElement("specular")->Attribute("R"));
-                model.specular.g = atof(color->FirstChildElement("specular")->Attribute("G"));
-                model.specular.b = atof(color->FirstChildElement("specular")->Attribute("B"));
-                model.emissive.r = atof(color->FirstChildElement("emissive")->Attribute("R"));
-                model.emissive.g = atof(color->FirstChildElement("emissive")->Attribute("G"));
-                model.emissive.b = atof(color->FirstChildElement("emissive")->Attribute("B"));
-                model.shininess = atof(color->FirstChildElement("shininess")->Attribute("value"));
+                diffuser = atof(color->FirstChildElement("diffuse")->Attribute("R"));
+                diffuseg = atof(color->FirstChildElement("diffuse")->Attribute("G"));
+                diffuseb = atof(color->FirstChildElement("diffuse")->Attribute("B"));
+                Diffuse *d = new Diffuse(diffuser, diffuseg, diffuseb);
+
+                ambientr = atof(color->FirstChildElement("ambient")->Attribute("R"));
+                ambientg = atof(color->FirstChildElement("ambient")->Attribute("G"));
+                ambientb = atof(color->FirstChildElement("ambient")->Attribute("B"));
+                Ambient *a = new Ambient(ambientr, ambientg, ambientb);
+
+                specularr = atof(color->FirstChildElement("specular")->Attribute("R"));
+                specularg = atof(color->FirstChildElement("specular")->Attribute("G"));
+                specularb = atof(color->FirstChildElement("specular")->Attribute("B"));
+                Specular *spec = new Specular(specularr, specularg, specularb);
+
+                emissiver = atof(color->FirstChildElement("emissive")->Attribute("R"));
+                emissiveg = atof(color->FirstChildElement("emissive")->Attribute("G"));
+                emissiveb = atof(color->FirstChildElement("emissive")->Attribute("B"));
+                Emissive *e = new Emissive(emissiver, emissiveg, emissiveb);
+
+                Shininess *shine = new Shininess(atof(color->FirstChildElement("shininess")->Attribute("value")));
+
+                model.diffuse = d;
+                model.ambient = a;
+                model.emissive = e;
+                model.specular = spec;
+                model.shininess = shine;
             }
 
             drawModel.transformations = transf;
@@ -310,31 +340,35 @@ void readXML(char* filename, Scene &mainScene){
     XMLElement *lightsXML = doc.FirstChildElement("world")->FirstChildElement("lights");
     if(lightsXML){
         XMLElement *lightXML = lightsXML->FirstChildElement("light");
+        int id = 0;
         while(lightXML){
-            Light light;
-            light.type = lightXML->Attribute("type");
+            std::string type = lightXML->Attribute("type");
+            float posX = 0, posY = 0, posZ = 0, dirX = 0, dirY = 0, dirZ = 0, cutoff = 0;
 
-            if (lightXML->Attribute("posX")){
-                light.posX = atof(lightXML->Attribute("posX"));
+            if (lightXML->Attribute("posx")){
+                posX = atof(lightXML->Attribute("posx"));
             }
-            if (lightXML->Attribute("posY")){
-                light.posY = atof(lightXML->Attribute("posY"));
+            if (lightXML->Attribute("posy")){
+                posY = atof(lightXML->Attribute("posy"));
             }
-            if (lightXML->Attribute("posZ")){
-                light.posZ = atof(lightXML->Attribute("posZ"));
+            if (lightXML->Attribute("posz")){
+                posZ = atof(lightXML->Attribute("posz"));
             }
-            if (lightXML->Attribute("dirX")){
-                light.dirX = atof(lightXML->Attribute("dirX"));
+            if (lightXML->Attribute("dirx")){
+                dirX = atof(lightXML->Attribute("dirx"));
             }
-            if (lightXML->Attribute("dirY")){
-                light.dirY = atof(lightXML->Attribute("dirY"));
+            if (lightXML->Attribute("diry")){
+                dirY = atof(lightXML->Attribute("diry"));
             }
-            if (lightXML->Attribute("dirZ")){
-                light.dirZ = atof(lightXML->Attribute("dirZ"));
+            if (lightXML->Attribute("dirz")){
+                dirZ = atof(lightXML->Attribute("dirz"));
             }
             if (lightXML->Attribute("cutoff")){
-                light.cutoff = atof(lightXML->Attribute("cutoff"));
+                cutoff = atof(lightXML->Attribute("cutoff"));
             }
+
+            Light *light = new Light(type, posX, posY, posZ, dirX, dirY, dirZ, cutoff, id);
+            id++;
 
             scene.lights.push_back(light);
             lightXML = lightXML->NextSiblingElement("light");

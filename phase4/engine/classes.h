@@ -12,15 +12,49 @@
 #include <vector>
 
 
-struct Light{
+extern bool renderCurve;
+
+int lightNum(int index);
+
+class Light{
     std::string type;
-    float posX;
-    float posY;
-    float posZ;
-    float dirX;
-    float dirY;
-    float dirZ;
     float cutoff;
+    float pos[4];
+    float dir[4];
+    int index;
+
+    public:
+        Light(std::string type, float posX, float posY, float posZ, float dirX, float dirY, float dirZ, float cutoff, int index){
+            this->type = type;
+            this->pos[0] = posX;
+            this->pos[1] = posY;
+            this->pos[2] = posZ;
+            this->pos[3] = 1.0;
+            this->dir[0] = dirX;
+            this->dir[1] = dirY;
+            this->dir[2] = dirZ;
+            this->dir[3] = 0.0;
+            this->cutoff = cutoff;
+            this->index = lightNum(index);
+            glEnable(this->index);
+        }
+
+        int getIndex(){
+            return this->index;
+        }
+
+        void execute(){
+
+            if(this->type == "point"){
+                glLightfv(this->index, GL_POSITION, this->pos);
+            }else if(this->type == "directional"){
+                glLightfv(this->index, GL_POSITION, this->dir);
+            }else if(this->type == "spotlight"){
+                glLightfv(this->index, GL_POSITION, this->pos);
+                glLightfv(this->index, GL_POSITION, this->dir);
+                glLightfv(this->index, GL_POSITION, &(this->cutoff));
+            }
+        }
 };
 
 
@@ -60,40 +94,94 @@ struct Camera{
 };
 
 
-struct Diffuse{
-    float r = 200.0;
-    float g = 200.0;
-    float b = 200.0;
+class Diffuse{
+    float rgb[4] = {200.0, 200.0, 200.0, 1.0};
+
+    public:
+        Diffuse(float r, float g, float b){
+            this->rgb[0] = r;
+            this->rgb[1] = g;
+            this->rgb[2] = b;
+            this->rgb[3] = 1.0;
+        }
+
+        void execute(){
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, this->rgb);
+        }
 };
 
 
-struct Ambient{
-    float r = 50.0;
-    float g = 50.0;
-    float b = 50.0;
+class Ambient{
+    float rgb[4] = {50.0, 50.0, 50.0, 1.0};
+
+    public:
+        Ambient(float r, float g, float b){
+            this->rgb[0] = r;
+            this->rgb[1] = g;
+            this->rgb[2] = b;
+            this->rgb[3] = 1.0;
+        }
+
+        void execute(){
+            glMaterialfv(GL_FRONT, GL_AMBIENT, this->rgb);
+        }
 };
 
 
-struct Specular{
-    float r = 0.0;
-    float g = 0.0;
-    float b = 0.0;
+class Specular{
+    float rgb[4] = {0, 0, 0, 1.0};
+
+    public:
+        Specular(float r, float g, float b){
+            this->rgb[0] = r;
+            this->rgb[1] = g;
+            this->rgb[2] = b;
+            this->rgb[3] = 1.0;
+        }
+
+        void execute(){
+            glMaterialfv(GL_FRONT, GL_SPECULAR, this->rgb);
+        }
 };
 
 
-struct Emissive{
-    float r = 0.0;
-    float g = 0.0;
-    float b = 0.0;
+class Emissive{
+    float rgb[4] = {0, 0, 0, 1};
+
+    public:
+        Emissive(float r, float g, float b){
+            this->rgb[0] = r;
+            this->rgb[1] = g;
+            this->rgb[2] = b;
+            this->rgb[3] = 1.0;
+        }
+
+        void execute(){
+            glMaterialfv(GL_FRONT, GL_EMISSION, this->rgb);
+        }
+};
+
+
+class Shininess{
+    float val = 0;
+
+    public:
+        Shininess(float value){
+            this->val = value;
+        }
+
+        void execute(){
+            glMaterialf(GL_FRONT, GL_SHININESS, this->val);
+        }
 };
 
 
 struct Model{
-    Diffuse diffuse;
-    Ambient ambient;
-    Specular specular;
-    Emissive emissive;
-    float shininess = 0.0;
+    Diffuse *diffuse;
+    Ambient *ambient;
+    Specular *specular;
+    Emissive *emissive;
+    Shininess *shininess;
     std::string texture_file;
     std::string model_file;
     float mass;
@@ -335,7 +423,7 @@ struct Scene{
     float width;
     float height;
     Camera camera;
-    std::vector<Light> lights;
+    std::vector<Light*> lights;
     std::vector<DrawModel> drawModels;
 };
 
