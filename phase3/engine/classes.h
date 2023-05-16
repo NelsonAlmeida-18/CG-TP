@@ -12,6 +12,9 @@
 #include <vector>
 
 
+extern bool renderCurve;
+
+
 struct Light{
     std::string type;
     float posX;

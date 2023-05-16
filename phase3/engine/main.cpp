@@ -16,6 +16,7 @@
 #include <array>
 #include <cstring>
 #include <unistd.h>
+#include <cmath>
 
 GLuint *buffers;
 
@@ -26,6 +27,9 @@ std::vector<int> numVertices;
 int timebase;
 float frames, time_passed, fps;
 char fps_buffer[100];
+bool renderCurve = true;
+float cameraSpeed = 0.1f;
+float cameraAngle = 0.0f;
 
 
 void changeSize(int w, int h) {
@@ -86,6 +90,25 @@ void youSpinMyHead(int button, int state, int x, int y){
         cameraLookingX=x;
         cameraLookingY=y;
     }*/
+}
+
+
+void processNormalKeys(unsigned char key, int x, int y){
+	if(key == 99 || key == 67){
+		renderCurve = !renderCurve;
+	}else if(key == 119 || key == 87){
+        scene.camera.position.x += cameraSpeed * sin(cameraAngle);
+        scene.camera.position.z -= cameraSpeed * cos(cameraAngle);
+    }else if(key == 97 || key == 65){
+        scene.camera.position.x -= cameraSpeed * cos(cameraAngle);
+        scene.camera.position.z -= cameraSpeed * sin(cameraAngle);
+    }else if(key == 100 || key == 68){
+        scene.camera.position.x += cameraSpeed * cos(cameraAngle);
+        scene.camera.position.z += cameraSpeed * sin(cameraAngle);
+    }else if(key == 115 || key == 83){
+        scene.camera.position.x -= cameraSpeed * sin(cameraAngle);
+        scene.camera.position.z += cameraSpeed * cos(cameraAngle);
+    }
 }
 
 
