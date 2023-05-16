@@ -10,15 +10,6 @@
 #include <string.h>
 
 
-bool renderCurve = true;
-
-void processNormalKeys(unsigned char key, int x, int y){
-	if(key == 99 || key == 67){
-		renderCurve = !renderCurve;
-	}
-}
-
-
 void buildRotMatrix(float *x, float *y, float *z, float *m) {
 
 	m[0] = x[0]; m[1] = x[1]; m[2] = x[2]; m[3] = 0;
