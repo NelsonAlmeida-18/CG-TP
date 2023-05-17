@@ -10,12 +10,26 @@
 #include <string.h>
 
 
-bool renderCurve = true;
-
-void processNormalKeys(unsigned char key, int x, int y){
-	if(key == 99 || key == 67){
-		renderCurve = !renderCurve;
+int lightNum(int index){
+	if(index == 0){
+		return GL_LIGHT0;
+	}else if(index == 1){
+		return GL_LIGHT1;
+	}else if(index == 2){
+		return GL_LIGHT2;
+	}else if(index == 3){
+		return GL_LIGHT3;
+	}else if(index == 4){
+		return GL_LIGHT4;
+	}else if(index == 5){
+		return GL_LIGHT5;
+	}else if(index == 6){
+		return GL_LIGHT6;
+	}else if(index == 7){
+		return GL_LIGHT7;
 	}
+
+	return -1;
 }
 
 

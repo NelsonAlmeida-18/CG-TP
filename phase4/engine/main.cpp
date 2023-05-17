@@ -16,8 +16,10 @@
 #include <array>
 #include <cstring>
 #include <unistd.h>
+#include <cmath>
 
-GLuint *buffers;
+
+GLuint *vertexBuffer, *normalBuffer;
 
 Scene scene;
 std::vector<DrawModel> drawModelVector;
@@ -26,6 +28,11 @@ std::vector<int> numVertices;
 int timebase;
 float frames, time_passed, fps;
 char fps_buffer[100];
+float cameraSpeed = 0.1;
+float cameraAlpha = M_PI;
+float cameraBeta = 0;
+bool renderCurve = true;
+
 
 
 void changeSize(int w, int h) {
@@ -53,39 +60,34 @@ void changeSize(int w, int h) {
 }
 
 
-float pitchAngle=0;
-float yawAngle=0;
-int initialMouseX=-1;
-int initialMouseY=-1;
-float cameraLookingX, cameraLookingY;
-// 100% screen width = rotação de 360 graus
+void processNormalKeys(unsigned char key, int x, int y){
+    float alpha, beta;
 
-void spinRoutine(int x, int y){
-    float windowWidth = glutGet(GLUT_WINDOW_WIDTH);
-    float windowHeight = glutGet(GLUT_WINDOW_HEIGHT);
-    
-    float operationX =(x-initialMouseX)*360/windowWidth;
-    float operationY =(y-initialMouseY)*360/windowHeight;
-    yawAngle+=operationX;
-    pitchAngle+=operationY;
-    glutPostRedisplay();
-    initialMouseX=x;
-    initialMouseY=y;
-}
-
-void youSpinMyHead(int button, int state, int x, int y){
-
-    
-    if (button==GLUT_LEFT_BUTTON){
-        initialMouseX=x;
-        initialMouseY=y;
-        glutMotionFunc(spinRoutine);
+	if(key == 99 || key == 67){
+		renderCurve = !renderCurve;
+	}else if(key == 119 || key == 87){ //w
+        alpha = cameraAlpha;
+        beta = cameraBeta;
+    }else if(key == 97 || key == 65){ //a
+        alpha = cameraAlpha + M_PI_2;
+        beta = cameraBeta;
+    }else if(key == 100 || key == 68){ //d
+        alpha = cameraAlpha - M_PI_2;
+        beta = cameraBeta;
+    }else if(key == 115 || key == 83){ //s
+        alpha = cameraAlpha + M_PI;
+        beta = cameraBeta;
     }
-    
-    /*if (cameraLookingX==-1){
-        cameraLookingX=x;
-        cameraLookingY=y;
-    }*/
+
+    float xx = sin(alpha) * cos(beta);
+    float yy = sin(beta);
+    float zz = cos(alpha) * cos(beta);
+
+    scene.camera.position.x += xx*0.1;
+    scene.camera.position.y += yy*0.1;
+    scene.camera.position.z += zz*0.1;
+
+    glutPostRedisplay();
 }
 
 
@@ -114,17 +116,17 @@ void tokenize(std::string const &str, const char* delim, std::vector<float> &out
 }
 
 
-int drawObj(std::string filename, int buffer){
+int drawFigure(Model model, int buffer){
     std::string str;
-    filename = "../../3d/" + filename;
+    std::string filename = "../../3d/" + model.model_file;
     std::ifstream file3d(filename);
 
     const char* delim = " ";
     if (file3d.is_open()){
                getline(file3d,str);
-        int numVertices = 0;
 
         std::vector<float> vectorBuffer;
+        std::vector<float> normals;
         int flag=0;
         int pos=0;
         while(getline(file3d, str)){
@@ -141,59 +143,30 @@ int drawObj(std::string filename, int buffer){
                 vectorBuffer.push_back(atof(line[2]));
                 vectorBuffer.push_back(atof(line[3]));
                 pos+=3;
+            }
+            if (std::strcmp(line[0],"vn")==0){
+                normals.push_back(atof(line[1]));
+                normals.push_back(atof(line[2]));
+                normals.push_back(atof(line[3]));
+                pos+=3;
                 flag=1;
             }
-            else if (std::strcmp(line[0],"v")!=0 && flag==1) {
+            else if (std::strcmp(line[0],"v")!=0 && std::strcmp(line[0],"vn")!=0 && flag==1) {
                 break;
             }
 
-            str = "";
+           str = "";
         }
 
         file3d.close();
+
+        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer[buffer]);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float)*vectorBuffer.size()*3,vectorBuffer.data(),GL_STATIC_DRAW);
         
-        glBindBuffer(GL_ARRAY_BUFFER, buffers[buffer]);
-        glBufferData(GL_ARRAY_BUFFER, vectorBuffer.size()*sizeof(float),vectorBuffer.data(),GL_STATIC_DRAW);
-        return vectorBuffer.size();
-    }
-    else{
-        std::cout << "Could not open file: " << filename << "\n\0";
-        exit(1);
-    }
-    return 0;
-}
-
-
-int drawFigure(std::string filename, int buffer){
-    std::string str;
-    filename = "../../3d/" + filename;
-    std::ifstream file3d(filename);
-
-    const char* delim = " ";
-    if (file3d.is_open()){
-        getline(file3d,str);
-        int numVertices = std::atoi(str.c_str());
-
-        float* vertexBuffer = (float*)malloc(numVertices*3*sizeof(float));
-        
-        int pos=0;
-        while(getline(file3d, str)){
-
-            std::vector<float> out;
-            tokenize(str, delim, out);
-            for (int i=0; i<3;i++,pos++){
-                vertexBuffer[pos]=out[i];
-            }
-            
-            str = "";
-        }
-
-        file3d.close();
-        
-        glBindBuffer(GL_ARRAY_BUFFER, buffers[buffer]);
-        glBufferData(GL_ARRAY_BUFFER, pos*sizeof(float),vertexBuffer,GL_STATIC_DRAW);
-        
-        return pos;
+        glBindBuffer(GL_ARRAY_BUFFER, normalBuffer[buffer]);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float)*normals.size()*3, normals.data(), GL_STATIC_DRAW);
+    
+        return (int)vectorBuffer.size();
     }
     else{
         std::cout << "Could not open file: " << filename << "\n\0";
@@ -208,14 +181,8 @@ std::vector<int> drawModels(){
     std::vector<int> numVertices;
     
     for(int i = 0; i < size; i++){
-
         std::string filename = scene.drawModels[i].model.model_file;
-        if (filename.size() >= 4 && filename.substr(filename.size() - 4) == ".obj") {
-            numVertices.push_back(drawObj(filename, i));
-        }
-        else{
-            numVertices.push_back(drawFigure(scene.drawModels[i].model.model_file, i));
-        }
+        numVertices.push_back(drawFigure(scene.drawModels[i].model, i));
     }
     
     return numVertices;
@@ -229,15 +196,15 @@ void drawAxis(){
     float windowWidth = glutGet(GLUT_WINDOW_WIDTH)/2;
     float windowHeight = glutGet(GLUT_WINDOW_HEIGHT)/2;
 
-    glColor3f(1,0,0);
+    glColor3f(1,0,0); //x axis - red
     glVertex3f(windowWidth, 0, 0);
     glVertex3f(-windowWidth, 0, 0);
 
-    glColor3f(0, 1, 0);
+    glColor3f(0, 1, 0); // y axis - green
     glVertex3f(0, windowHeight, 0);
     glVertex3f(0, -windowHeight, 0);
 
-    glColor3f(0, 0, 1);
+    glColor3f(0, 0, 1); //z axis - blue
     glVertex3f(0, 0, windowWidth);
     glVertex3f(0, 0, -windowWidth);
 
@@ -246,41 +213,57 @@ void drawAxis(){
 
 
 void renderScene(){
-    //clear buffers
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    float fps;
+    int time;
+    char s[64];
+    
+    glClearColor(0.0f,0.0f,0.0f,0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //set the camera
     glLoadIdentity();
+
     gluLookAt(scene.camera.position.x, scene.camera.position.y, scene.camera.position.z,
               scene.camera.lookAt.x, scene.camera.lookAt.y, scene.camera.lookAt.z,
               scene.camera.up.x, scene.camera.up.y, scene.camera.up.z);
 
     //draw objects
-    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
-    
-    drawAxis();
 
-    glRotatef(yawAngle, 0, 1, 0);
-    glRotatef(pitchAngle,1,0,0);
+    drawAxis();
 
     numVertices = drawModels();
 
+    /*glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, red);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, white);
+    glMaterialf(GL_FRONT, GL_SHININESS, 128);*/
+
+    for(Light *l : scene.lights){
+        l->execute();
+    }
+
     for(int i=0; i<scene.drawModels.size(); i++){
         glPushMatrix();
+
+        scene.drawModels[i].model.diffuse->execute();
+        scene.drawModels[i].model.specular->execute();
+        scene.drawModels[i].model.ambient->execute();
+        scene.drawModels[i].model.emissive->execute();
+        scene.drawModels[i].model.shininess->execute();
                 
         for(Transform *t : scene.drawModels[i].transformations){
             t->execute();
         }
 
-        glBindBuffer(GL_ARRAY_BUFFER,buffers[i]);
+        glBindBuffer(GL_ARRAY_BUFFER,vertexBuffer[i]);
         glVertexPointer(3,GL_FLOAT, 0,0);
-        glColor3f(0.4,0.8,0.7);
-        glDrawArrays(GL_TRIANGLES, 0, numVertices[i]/3);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, normalBuffer[i]);
+        glNormalPointer(GL_FLOAT,0,0);
+
+        glDrawArrays(GL_TRIANGLES,0, numVertices[i]);
+
 
         glPopMatrix();
     }
-
-    glutPostRedisplay();
 
     frames++;
     time_passed = glutGet(GLUT_ELAPSED_TIME);
@@ -308,7 +291,8 @@ int main(int argc, char **argv){
         strcat(path, argv[1]);
         readXML(path, scene);
         //generate buffers
-        buffers = (GLuint*)malloc(sizeof(GLuint)*scene.drawModels.size());
+        vertexBuffer = (GLuint*)malloc(sizeof(GLuint)*scene.drawModels.size());
+        normalBuffer = (GLuint*)malloc(sizeof(GLuint)*scene.drawModels.size());
     }else{
         return 1;
     }
@@ -319,17 +303,18 @@ int main(int argc, char **argv){
     glutInitWindowPosition(0, 0);
     glutInitWindowSize(800, 800);
     glutCreateWindow("Project");
+    glEnable(GL_LIGHTING);
 
     //Required callback registry
     glutDisplayFunc(renderScene);
     glutReshapeFunc(changeSize);
-    glutMouseFunc(youSpinMyHead);
     glutSpecialFunc(processSpecialKeys);
     glutKeyboardFunc(processNormalKeys);
 
     //OpenGL settings
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_RESCALE_NORMAL);
     //glCullFace(GL_BACK);
 
     #ifndef __APPLE__
@@ -337,7 +322,9 @@ int main(int argc, char **argv){
     #endif
 
     glEnableClientState(GL_VERTEX_ARRAY); // para aceitar os arrays de vértices para a otimização
-    glGenBuffers(scene.drawModels.size(), buffers);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glGenBuffers(scene.drawModels.size(), normalBuffer);
+    glGenBuffers(scene.drawModels.size(), vertexBuffer);
 
     time_passed = glutGet(GLUT_ELAPSED_TIME);
 
