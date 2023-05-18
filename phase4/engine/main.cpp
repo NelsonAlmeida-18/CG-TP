@@ -29,10 +29,11 @@ int timebase;
 float frames, time_passed, fps;
 char fps_buffer[100];
 float cameraSpeed = 0.1;
-float cameraAlpha = M_PI;
-float cameraBeta = 0;
 bool renderCurve = true;
-
+float lastMouseX, lastMouseY;
+float cameraAngleX = 0;
+float cameraAngleY = 0;
+float cameraDistance = 5;
 
 
 void changeSize(int w, int h) {
@@ -60,34 +61,133 @@ void changeSize(int w, int h) {
 }
 
 
+void normalizeVector(float v[3]){
+    float norm = sqrt((v[0]*v[0]) + (v[1]*v[1]) + (v[2]*v[2]));
+    
+    for(int i = 0; i < 3; i++){
+        v[i] = v[i]/norm;
+    }
+}
+
+
+void cameraMotion(unsigned char key){
+    float k[3] = {scene.camera.lookAt.x - scene.camera.position.x,
+                  scene.camera.lookAt.y - scene.camera.position.y,
+                  scene.camera.lookAt.z - scene.camera.position.z};
+    normalizeVector(k);
+
+    float up[3] = {scene.camera.up.x,
+                   scene.camera.up.y,
+                   scene.camera.up.z};
+
+    normalizeVector(up);
+
+    float i[3] = {up[1] * k[2] - up[2]*k[1],
+                  up[2] * k[0] - up[0]*k[2],
+                  up[0] * k[1] - up[1]*k[0]};
+    normalizeVector(i);
+
+    if(key == 119 || key == 87){ //w
+        scene.camera.position.x += k[0] * cameraSpeed;
+        scene.camera.position.y += k[1] * cameraSpeed;
+        scene.camera.position.z += k[2] * cameraSpeed;
+        scene.camera.lookAt.x += k[0] * cameraSpeed;
+        scene.camera.lookAt.y += k[1] * cameraSpeed;
+        scene.camera.lookAt.z += k[2] * cameraSpeed;
+    }else if(key == 100 || key == 68){ //a
+        scene.camera.position.x -= i[0] * cameraSpeed;
+        scene.camera.position.y -= i[1] * cameraSpeed;
+        scene.camera.position.z -= i[2] * cameraSpeed;
+        scene.camera.lookAt.x -= i[0] * cameraSpeed;
+        scene.camera.lookAt.y -= i[1] * cameraSpeed;
+        scene.camera.lookAt.z -= i[2] * cameraSpeed;
+    }else if(key == 97 || key == 65){ //d
+        scene.camera.position.x += i[0] * cameraSpeed;
+        scene.camera.position.y += i[1] * cameraSpeed;
+        scene.camera.position.z += i[2] * cameraSpeed;
+        scene.camera.lookAt.x += i[0] * cameraSpeed;
+        scene.camera.lookAt.y += i[1] * cameraSpeed;
+        scene.camera.lookAt.z += i[2] * cameraSpeed;
+    }else if(key == 115 || key == 83){ //s
+        scene.camera.position.x -= k[0] * cameraSpeed;
+        scene.camera.position.y -= k[1] * cameraSpeed;
+        scene.camera.position.z -= k[2] * cameraSpeed;
+        scene.camera.lookAt.x -= k[0] * cameraSpeed;
+        scene.camera.lookAt.y -= k[1] * cameraSpeed;
+        scene.camera.lookAt.z -= k[2] * cameraSpeed;
+    }
+}
+
+
 void processNormalKeys(unsigned char key, int x, int y){
-    float alpha, beta;
+    float k[3] = {scene.camera.lookAt.x - scene.camera.position.x,
+                  scene.camera.lookAt.y - scene.camera.position.y,
+                  scene.camera.lookAt.z - scene.camera.position.z};
+    normalizeVector(k);
+
+    float up[3] = {scene.camera.up.x,
+                   scene.camera.up.y,
+                   scene.camera.up.z};
+
+    normalizeVector(up);
+
+    float i[3] = {up[1] * k[2] - up[2]*k[1],
+                  up[2] * k[0] - up[0]*k[2],
+                  up[0] * k[1] - up[1]*k[0]};
+    normalizeVector(i);
 
 	if(key == 99 || key == 67){
 		renderCurve = !renderCurve;
-	}else if(key == 119 || key == 87){ //w
-        alpha = cameraAlpha;
-        beta = cameraBeta;
-    }else if(key == 97 || key == 65){ //a
-        alpha = cameraAlpha + M_PI_2;
-        beta = cameraBeta;
-    }else if(key == 100 || key == 68){ //d
-        alpha = cameraAlpha - M_PI_2;
-        beta = cameraBeta;
-    }else if(key == 115 || key == 83){ //s
-        alpha = cameraAlpha + M_PI;
-        beta = cameraBeta;
+	}else{
+        cameraMotion(key);
     }
 
-    float xx = sin(alpha) * cos(beta);
-    float yy = sin(beta);
-    float zz = cos(alpha) * cos(beta);
+    glutPostRedisplay();
+}
 
-    scene.camera.position.x += xx*0.1;
-    scene.camera.position.y += yy*0.1;
-    scene.camera.position.z += zz*0.1;
+
+void mouseMotion(int x, int y)
+{
+    int deltaX = x - lastMouseX;
+    int deltaY = y - lastMouseY;
+
+    // Adjust camera rotation based on mouse movement
+    cameraAngleY += deltaX * 0.1f;
+    cameraAngleX -= deltaY * 0.1f;
+
+    // Clamp camera rotation angles to avoid over-rotation
+    if (cameraAngleX > 89.0f)
+        cameraAngleX = 89.0f;
+    else if (cameraAngleX < -89.0f)
+        cameraAngleX = -89.0f;
+
+    // Update the eye position based on cameraDistance, cameraAngleX, and cameraAngleY
+    scene.camera.lookAt.x = cameraDistance * sin(cameraAngleY * M_PI / 180.0f) * cos(cameraAngleX * M_PI / 180.0f);
+    scene.camera.lookAt.y = cameraDistance * sin(cameraAngleX * M_PI / 180.0f);
+    scene.camera.lookAt.z = cameraDistance * cos(cameraAngleY * M_PI / 180.0f) * cos(cameraAngleX * M_PI / 180.0f);
+
+    lastMouseX = x;
+    lastMouseY = y;
 
     glutPostRedisplay();
+}
+
+
+void mouseButton(int button, int state, int x, int y)
+{
+    if (button == GLUT_LEFT_BUTTON)
+    {
+        if (state == GLUT_DOWN)
+        {
+            lastMouseX = x;
+            lastMouseY = y;
+            glutMotionFunc(mouseMotion);
+        }
+        else if (state == GLUT_UP)
+        {
+            glutMotionFunc(NULL);
+        }
+    }
 }
 
 
@@ -232,9 +332,8 @@ void renderScene(){
 
     numVertices = drawModels();
 
-    /*glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, red);
-    glMaterialfv(GL_FRONT, GL_SPECULAR, white);
-    glMaterialf(GL_FRONT, GL_SHININESS, 128);*/
+    float amb[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, amb);
 
     for(Light *l : scene.lights){
         l->execute();
@@ -282,6 +381,20 @@ void renderScene(){
 }
 
 
+void initLights(){
+    float light_amb[4] = {1.0, 0.0, 0.0, 1.0};
+    float light_dif[4] = {1.0, 1.0, 1.0, 1.0};
+    float light_spe[4] = {0.0, 0.0 , 0.0, 1.0};
+
+    for(Light *l : scene.lights){
+        glEnable(l->getIndex());
+        glLightfv(l->getIndex(), GL_AMBIENT, light_amb);
+        glLightfv(l->getIndex(), GL_DIFFUSE, light_dif);
+        glLightfv(l->getIndex(), GL_SPECULAR, light_spe);
+    }
+}
+
+
 char path[50];
 
 int main(int argc, char **argv){
@@ -310,12 +423,15 @@ int main(int argc, char **argv){
     glutReshapeFunc(changeSize);
     glutSpecialFunc(processSpecialKeys);
     glutKeyboardFunc(processNormalKeys);
+    glutMouseFunc(mouseButton);
 
     //OpenGL settings
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_RESCALE_NORMAL);
     //glCullFace(GL_BACK);
+
+    initLights();
 
     #ifndef __APPLE__
         glewInit();
