@@ -36,7 +36,6 @@ class Light{
             this->dir[3] = 0.0;
             this->cutoff = cutoff;
             this->index = lightNum(index);
-            glEnable(this->index);
         }
 
         int getIndex(){
@@ -51,8 +50,8 @@ class Light{
                 glLightfv(this->index, GL_POSITION, this->dir);
             }else if(this->type == "spotlight"){
                 glLightfv(this->index, GL_POSITION, this->pos);
-                glLightfv(this->index, GL_POSITION, this->dir);
-                glLightfv(this->index, GL_POSITION, &(this->cutoff));
+                glLightfv(this->index, GL_SPOT_DIRECTION, this->dir);
+                glLightfv(this->index, GL_SPOT_CUTOFF, &(this->cutoff));
             }
         }
 };
@@ -95,13 +94,13 @@ struct Camera{
 
 
 class Diffuse{
-    float rgb[4] = {200.0, 200.0, 200.0, 1.0};
+    float rgb[4] = {0.78, 0.78, 0.78, 1.0};
 
     public:
         Diffuse(float r, float g, float b){
-            this->rgb[0] = r;
-            this->rgb[1] = g;
-            this->rgb[2] = b;
+            this->rgb[0] = r/float(255);
+            this->rgb[1] = g/float(255);
+            this->rgb[2] = b/float(255);
             this->rgb[3] = 1.0;
         }
 
@@ -112,13 +111,13 @@ class Diffuse{
 
 
 class Ambient{
-    float rgb[4] = {50.0, 50.0, 50.0, 1.0};
+    float rgb[4] = {0.2, 0.2, 0.2, 1.0};
 
     public:
         Ambient(float r, float g, float b){
-            this->rgb[0] = r;
-            this->rgb[1] = g;
-            this->rgb[2] = b;
+            this->rgb[0] = r/float(255);
+            this->rgb[1] = g/float(255);
+            this->rgb[2] = b/float(255);
             this->rgb[3] = 1.0;
         }
 
@@ -133,9 +132,9 @@ class Specular{
 
     public:
         Specular(float r, float g, float b){
-            this->rgb[0] = r;
-            this->rgb[1] = g;
-            this->rgb[2] = b;
+            this->rgb[0] = r/float(255);
+            this->rgb[1] = g/float(255);
+            this->rgb[2] = b/float(255);
             this->rgb[3] = 1.0;
         }
 
@@ -146,13 +145,13 @@ class Specular{
 
 
 class Emissive{
-    float rgb[4] = {0, 0, 0, 1};
+    float rgb[4] = {0, 0, 0, 1.0};
 
     public:
         Emissive(float r, float g, float b){
-            this->rgb[0] = r;
-            this->rgb[1] = g;
-            this->rgb[2] = b;
+            this->rgb[0] = r/float(255);
+            this->rgb[1] = g/float(255);
+            this->rgb[2] = b/float(255);
             this->rgb[3] = 1.0;
         }
 
