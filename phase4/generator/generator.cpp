@@ -171,7 +171,7 @@ void generateBox(float length, int divisions) {
 
     //lower face
 
-    initX = length / 2;
+    initX = -length / 2;
     initY =  -length/2;
 
     for (int x=0;x<divisions;x++){
@@ -222,7 +222,7 @@ void generateBox(float length, int divisions) {
         }    
     }
 
-    initX = length / 2;
+    initX = -length / 2;
     initY = length/2;
 
     //upper face
@@ -276,7 +276,7 @@ void generateBox(float length, int divisions) {
     }
 
     //frontface
-    initX = length / 2;
+    initX = -length / 2;
     initY = -length/2;
     initZ = length/2;
 
@@ -329,7 +329,7 @@ void generateBox(float length, int divisions) {
     }
 
     //backface 
-    initX = length / 2;
+    initX = -length / 2;
     initY = -length/2;
     initZ = -length/2;
 
@@ -385,7 +385,7 @@ void generateBox(float length, int divisions) {
     //right 
     initX = -length / 2;
     initY = -length/2;
-    initZ = length+length/2;
+    initZ = length/2;
 
     for (int x=0;x<divisions;x++){
         for (int z=0;z<divisions;z++){
@@ -439,7 +439,7 @@ void generateBox(float length, int divisions) {
     //leftface 
     initX = -length / 2;
     initY = -length/2;
-    initZ = length/2;
+    initZ = -length/2;
 
     for (int x=0;x<divisions;x++){
         for (int z=0;z<divisions;z++){
