@@ -299,30 +299,30 @@ void generateBox(float length, int divisions) {
 
             // upper
             extra = cross(point3 - point1, point3 - point2);
-            points.push_back(point2);
+            points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,0,1));
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,0,1));
-            points.push_back(point1);
+            points.push_back(point2);
             points[points.size() - 1].add2Normal(point(0,0,1));
 
             // lower facing triangle
             // lower
             extra = cross(point4 - point1, point3 - point1);
-            points.push_back(point1);
+            points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,0,1));
             points.push_back(point4);
             points[points.size() - 1].add2Normal(point(0,0,1));
-            points.push_back(point3);
+            points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,0,1));
 
             // upper
             extra = cross(point2 - point3, point1 - point3);
-            points.push_back(point3);
+            points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,0,1));
             points.push_back(point2);
             points[points.size() - 1].add2Normal(point(0,0,1));
-            points.push_back(point1);
+            points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,0,1));
 
         }    
@@ -366,7 +366,7 @@ void generateBox(float length, int divisions) {
             points[points.size() - 1].add2Normal(point(0,0,-1));
             points.push_back(point4);
             points[points.size() - 1].add2Normal(point(0,0,-1));
-            points.push_back(point3);
+            points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,0,-1));
 
             // upper
@@ -420,7 +420,7 @@ void generateBox(float length, int divisions) {
             points[points.size() - 1].add2Normal(point(1,0,0));
             points.push_back(point4);
             points[points.size() - 1].add2Normal(point(1,0,0));
-            points.push_back(point3);
+            points.push_back(point1);
             points[points.size() - 1].add2Normal(point(1,0,0));
 
             // upper
@@ -451,46 +451,44 @@ void generateBox(float length, int divisions) {
             // up facing triangle
             // lower
             extra = cross(point3 - point1, point4 - point1);
-            points.push_back(point4);
-            points[points.size() - 1].add2Normal(extra);
-            points.push_back(point3);
-            points[points.size() - 1].add2Normal(extra);
             points.push_back(point1);
-            points[points.size() - 1].add2Normal(extra);
+            points[points.size() - 1].add2Normal(point(-1,0,0));
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(-1,0,0));
+            points.push_back(point4);
+            points[points.size() - 1].add2Normal(point(-1,0,0));
 
             // upper
             extra = cross(point3 - point1, point3 - point2);
-            points.push_back(point1);
-            points[points.size() - 1].add2Normal(extra);
-            points.push_back(point3);
-            points[points.size() - 1].add2Normal(extra);
             points.push_back(point2);
-            points[points.size() - 1].add2Normal(extra);
+            points[points.size() - 1].add2Normal(point(-1,0,0));
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(-1,0,0));
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(-1,0,0));
 
             // down facing triangle
             // lower
             extra = cross(point4 - point1, point3 - point1);
             points.push_back(point3);
-            points[points.size() - 1].add2Normal(extra);
+            points[points.size() - 1].add2Normal(point(-1,0,0));
             points.push_back(point4);
-            points[points.size() - 1].add2Normal(extra);
-            points.push_back(point3);
-            points[points.size() - 1].add2Normal(extra);
+            points[points.size() - 1].add2Normal(point(-1,0,0));
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(-1,0,0));
 
             // upper
             extra = cross(point2 - point3, point1 - point3);
             points.push_back(point3);
-            points[points.size() - 1].add2Normal(extra);
+            points[points.size() - 1].add2Normal(point(-1,0,0));
             points.push_back(point2);
-            points[points.size() - 1].add2Normal(extra);
+            points[points.size() - 1].add2Normal(point(-1,0,0));
             points.push_back(point1);
-            points[points.size() - 1].add2Normal(extra);
+            points[points.size() - 1].add2Normal(point(-1,0,0));
 
         }    
 
     }
-
-
     normalizeAllVertices();
     addPoints();
     addNormals();
