@@ -99,62 +99,56 @@ void generatePlane(float length, int divisions){
 
     for (int x=0;x<divisions;x++){
         for (int z=0;z<divisions;z++){
-            point1.setPoint(initX+x*edgeIncrement,0,initZ-(z+1)*edgeIncrement);
-            point2.setPoint(initX+x*edgeIncrement,0,initZ-z*edgeIncrement);
-            point3.setPoint(initX+(x+1)*edgeIncrement,0,initZ-z*edgeIncrement);
+            point1.setPoint(initX+(x+1)*edgeIncrement,0,initZ-z*edgeIncrement);
+            point2.setPoint(initX+(x+1)*edgeIncrement,0,initZ-(z+1)*edgeIncrement);
+            point3.setPoint(initX+x*edgeIncrement, 0, initZ-(z+1)*edgeIncrement);
+            point4.setPoint(initX+x*edgeIncrement,0,initZ-z*edgeIncrement);
 
-            point4.setPoint(initX+(x+1)*edgeIncrement,0,initZ-(z+1)*edgeIncrement);
-            
-            //write points to buffer
-            //upper face
-
-            //upper triangle
+            // upper facing triangle
+            // lower
+            extra = cross(point3 - point1, point4 - point1);
             points.push_back(point1);
-            points.push_back(point2);
+            points[points.size() - 1].add2Normal(extra);
             points.push_back(point3);
-
-            extra=cross(point2-point1, point3-point1);
-        
-            executeNormalAlgorithm(point1, extra);
-            executeNormalAlgorithm(point2, extra);
-            executeNormalAlgorithm(point3, extra);
-
-            //lower triangle
+            points[points.size() - 1].add2Normal(extra);
             points.push_back(point4);
-            points.push_back(point1);
-            points.push_back(point3);
+            points[points.size() - 1].add2Normal(extra);
 
-            extra=cross(point4-point1, point3-point1);
-            executeNormalAlgorithm(point4, extra);
-            executeNormalAlgorithm(point1, extra);
-            executeNormalAlgorithm(point3, extra);
-
-            //downward face
-            //upper triangle
-            points.push_back(point1);
-            points.push_back(point3);
+            // upper
+            extra = cross(point1 - point3, point2 - point3);
             points.push_back(point2);
-
-            extra=cross(point1-point3, point2-point3);
-            executeNormalAlgorithm(point1, extra);
-            executeNormalAlgorithm(point3, extra);
-            executeNormalAlgorithm(point2, extra);
-            //lower triangle
-            
-            points.push_back(point1);
-            points.push_back(point4);
+            points[points.size() - 1].add2Normal(extra);
             points.push_back(point3);
+            points[points.size() - 1].add2Normal(extra);
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(extra);
 
-            extra=cross(point1-point4, point3-point4);
-            executeNormalAlgorithm(point1, extra);
-            executeNormalAlgorithm(point4, extra);
-            executeNormalAlgorithm(point3, extra);
+            // lower facing triangle
+            // lower
+            extra = cross(point4 - point1, point3 - point1);
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(extra);
+            points.push_back(point4);
+            points[points.size() - 1].add2Normal(extra);
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(extra);
+
+            // upper
+            extra = cross(point2 - point3, point1 - point3);
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(extra);
+            points.push_back(point2);
+            points[points.size() - 1].add2Normal(extra);
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(extra);
+
         }    
     }
     normalizeAllVertices();
     addPoints();
     addNormals();
 }
+
 
 void generateBox(float length, int divisions) {
     printf("Generating Box");
@@ -165,199 +159,338 @@ void generateBox(float length, int divisions) {
     int numOfTriangs = 6 * divisions * divisions * 2;
     int numOfPoints = numOfTriangs * 3;
     
-    buffer << numOfPoints << '\n';
+    //buffer << numOfPoints << '\n';
+
+    std::vector<int> indices;
 
     point point1;
     point point2;
     point point3;
     point point4;
-
-    point point5;
-    point point6;
-    point point7;
-    point point8;
-
     point extra;
 
-    std::vector<int> indices;
+    //lower face
 
-    for (int j = 0; j < divisions; j++) {
-        for (int i = 0; i < divisions; i++) {
-            // Bottom Face
-            point1.setPoint(initX - j * edgeIncrement, -initY, initZ - (i + 1) * edgeIncrement);
-            point2.setPoint(initX - j * edgeIncrement, -initY, initZ - i * edgeIncrement);
-            point3.setPoint(initX - (j + 1) * edgeIncrement, -initY, initZ - i * edgeIncrement);
-            point4.setPoint(initX - (j + 1) * edgeIncrement, -initY, initZ - (i + 1) * edgeIncrement);
+    initX = length / 2;
+    initY =  -length/2;
 
-            //upper triangle
+    for (int x=0;x<divisions;x++){
+        for (int z=0;z<divisions;z++){
+            point1.setPoint(initX+(x+1)*edgeIncrement,initY,initZ-z*edgeIncrement);
+            point2.setPoint(initX+(x+1)*edgeIncrement,initY,initZ-(z+1)*edgeIncrement);
+            point3.setPoint(initX+x*edgeIncrement, initY, initZ-(z+1)*edgeIncrement);
+            point4.setPoint(initX+x*edgeIncrement,initY,initZ-z*edgeIncrement);
 
+            // upper facing triangle
+            // lower
+            extra = cross(point3 - point1, point4 - point1);
             points.push_back(point1);
-            points.push_back(point2);
+            points[points.size() - 1].add2Normal(point(0,-1,0));
             points.push_back(point3);
-
-            extra=cross(point1-point2, point3-point2);
-            executeNormalAlgorithm(point1, extra);
-            executeNormalAlgorithm(point2, extra);
-            executeNormalAlgorithm(point3, extra);
-
-            //lower triangle
+            points[points.size() - 1].add2Normal(point(0,-1,0));
             points.push_back(point4);
-            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(0,-1,0));
+
+            // upper
+            extra = cross(point1 - point3, point2 - point3);
+            points.push_back(point2);
+            points[points.size() - 1].add2Normal(point(0,-1,0));
             points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(0,-1,0));
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(0,-1,0));
 
-            extra=cross(point4-point1, point3-point1);
-            executeNormalAlgorithm(point4, extra);
-            executeNormalAlgorithm(point1, extra);
-            executeNormalAlgorithm(point3, extra);
+            // lower facing triangle
+            // lower
+            extra = cross(point4 - point1, point3 - point1);
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(0,-1,0));
+            points.push_back(point4);
+            points[points.size() - 1].add2Normal(point(0,-1,0));
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(0,-1,0));
 
+            // upper
+            extra = cross(point2 - point3, point1 - point3);
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(0,-1,0));
+            points.push_back(point2);
+            points[points.size() - 1].add2Normal(point(0,-1,0));
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(0,-1,0));
 
-            // Top Face
-            point5.setPoint(initX - j * edgeIncrement, initY, initZ - (i + 1) * edgeIncrement);
-            point6.setPoint(initX - j * edgeIncrement, initY, initZ - i * edgeIncrement);
-            point7.setPoint(initX - (j + 1) * edgeIncrement, initY, initZ - i * edgeIncrement);
-            point8.setPoint(initX - (j + 1) * edgeIncrement, initY, initZ - (i + 1) * edgeIncrement);
+        }    
+    }
 
-            // Write point to buffer
-            //upper triangle
-            points.push_back(point6);
-            points.push_back(point5);
-            points.push_back(point7);
+    initX = length / 2;
+    initY = length/2;
 
-            extra=cross(point6-point5, point7-point5);
-            executeNormalAlgorithm(point6, extra);
-            executeNormalAlgorithm(point5, extra);
-            executeNormalAlgorithm(point7, extra);
+    //upper face
 
-            //lower triangle
-            points.push_back(point5);
-            points.push_back(point8);
-            points.push_back(point7);
+    for (int x=0;x<divisions;x++){
+        for (int z=0;z<divisions;z++){
+            point1.setPoint(initX+(x+1)*edgeIncrement,initY,initZ-z*edgeIncrement);
+            point2.setPoint(initX+(x+1)*edgeIncrement,initY,initZ-(z+1)*edgeIncrement);
+            point3.setPoint(initX+x*edgeIncrement, initY, initZ-(z+1)*edgeIncrement);
+            point4.setPoint(initX+x*edgeIncrement,initY,initZ-z*edgeIncrement);
 
-            extra=cross(point5-point8, point7-point8);
-            executeNormalAlgorithm(point5, extra);
-            executeNormalAlgorithm(point8, extra);
-            executeNormalAlgorithm(point7, extra);
-        }
+            // upper facing triangle
+            // lower
+            extra = cross(point3 - point1, point4 - point1);
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(0,1,0));
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(0,1,0));
+            points.push_back(point4);
+            points[points.size() - 1].add2Normal(point(0,1,0));
+
+            // upper
+            extra = cross(point1 - point3, point2 - point3);
+            points.push_back(point2);
+            points[points.size() - 1].add2Normal(point(0,1,0));
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(0,1,0));
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(0,1,0));
+
+            // lower facing triangle
+            // lower
+            extra = cross(point4 - point1, point3 - point1);
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(0,1,0));
+            points.push_back(point4);
+            points[points.size() - 1].add2Normal(point(0,1,0));
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(0,1,0));
+
+            // upper
+            extra = cross(point2 - point3, point1 - point3);
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(0,1,0));
+            points.push_back(point2);
+            points[points.size() - 1].add2Normal(point(0,1,0));
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(0,1,0));
+
+        }    
+    }
+
+    //frontface
+    initX = length / 2;
+    initY = -length/2;
+    initZ = length/2;
+
+    for (int x=0;x<divisions;x++){
+        for (int z=0;z<divisions;z++){
+            point1.setPoint(initX+(x+1)*edgeIncrement,initY+z*edgeIncrement, initZ);
+            point2.setPoint(initX+(x+1)*edgeIncrement,initY+(z+1)*edgeIncrement, initZ);
+            point3.setPoint(initX+x*edgeIncrement, initY+(z+1)*edgeIncrement, initZ);
+            point4.setPoint(initX+x*edgeIncrement,initY+z*edgeIncrement,initZ);
+
+            // upper facing triangle
+            // lower
+            extra = cross(point3 - point1, point4 - point1);
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(0,0,1));
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(0,0,1));
+            points.push_back(point4);
+            points[points.size() - 1].add2Normal(point(0,0,1));
+
+            // upper
+            extra = cross(point3 - point1, point3 - point2);
+            points.push_back(point2);
+            points[points.size() - 1].add2Normal(point(0,0,1));
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(0,0,1));
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(0,0,1));
+
+            // lower facing triangle
+            // lower
+            extra = cross(point4 - point1, point3 - point1);
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(0,0,1));
+            points.push_back(point4);
+            points[points.size() - 1].add2Normal(point(0,0,1));
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(0,0,1));
+
+            // upper
+            extra = cross(point2 - point3, point1 - point3);
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(0,0,1));
+            points.push_back(point2);
+            points[points.size() - 1].add2Normal(point(0,0,1));
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(0,0,1));
+
+        }    
+    }
+
+    //backface 
+    initX = length / 2;
+    initY = -length/2;
+    initZ = -length/2;
+
+    for (int x=0;x<divisions;x++){
+        for (int z=0;z<divisions;z++){
+            point1.setPoint(initX+(x+1)*edgeIncrement,initY+z*edgeIncrement, initZ);
+            point2.setPoint(initX+(x+1)*edgeIncrement,initY+(z+1)*edgeIncrement, initZ);
+            point3.setPoint(initX+x*edgeIncrement, initY+(z+1)*edgeIncrement, initZ);
+            point4.setPoint(initX+x*edgeIncrement,initY+z*edgeIncrement,initZ);
+
+            // up facing triangle
+            // lower
+            extra = cross(point4 - point1, point3 - point1);
+            points.push_back(point4);
+            points[points.size() - 1].add2Normal(point(0,0,-1));
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(0,0,-1));
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(0,0,-1));
+
+            // upper
+            extra = cross(point3 - point1, point3 - point2);
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(0,0,-1));
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(0,0,-1));
+            points.push_back(point2);
+            points[points.size() - 1].add2Normal(point(0,0,-1));
+
+            // down facing triangle
+            // lower
+            extra = cross(point4 - point1, point3 - point1);
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(0,0,-1));
+            points.push_back(point4);
+            points[points.size() - 1].add2Normal(point(0,0,-1));
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(0,0,-1));
+
+            // upper
+            extra = cross(point2 - point3, point1 - point3);
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(0,0,-1));
+            points.push_back(point2);
+            points[points.size() - 1].add2Normal(point(0,0,-1));
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(0,0,-1));
+
+        }    
+
+    }
+
+    //right 
+    initX = -length / 2;
+    initY = -length/2;
+    initZ = length+length/2;
+
+    for (int x=0;x<divisions;x++){
+        for (int z=0;z<divisions;z++){
+            point1.setPoint(initZ,initY+z*edgeIncrement, initX+(x+1)*edgeIncrement);
+            point2.setPoint(initZ,initY+(z+1)*edgeIncrement, initX+(x+1)*edgeIncrement);
+            point3.setPoint(initZ, initY+(z+1)*edgeIncrement, initX+x*edgeIncrement);
+            point4.setPoint(initZ,initY+z*edgeIncrement,initX+x*edgeIncrement);
+
+            // up facing triangle
+            // lower
+            extra = cross(point3 - point1, point4 - point1);
+            points.push_back(point4);
+            points[points.size() - 1].add2Normal(point(1,0,0));
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(1,0,0));
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(1,0,0));
+
+            // upper
+            extra = cross(point3 - point1, point3 - point2);
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(1,0,0));
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(1,0,0));
+            points.push_back(point2);
+            points[points.size() - 1].add2Normal(point(1,0,0));
+
+            // down facing triangle
+            // lower
+            extra = cross(point4 - point1, point3 - point1);
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(1,0,0));
+            points.push_back(point4);
+            points[points.size() - 1].add2Normal(point(1,0,0));
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(1,0,0));
+
+            // upper
+            extra = cross(point2 - point3, point1 - point3);
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(point(1,0,0));
+            points.push_back(point2);
+            points[points.size() - 1].add2Normal(point(1,0,0));
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(point(1,0,0));
+
+        }    
+
+    }
+
+    //leftface 
+    initX = -length / 2;
+    initY = -length/2;
+    initZ = length/2;
+
+    for (int x=0;x<divisions;x++){
+        for (int z=0;z<divisions;z++){
+            point1.setPoint(initZ,initY+z*edgeIncrement, initX+(x+1)*edgeIncrement);
+            point2.setPoint(initZ,initY+(z+1)*edgeIncrement, initX+(x+1)*edgeIncrement);
+            point3.setPoint(initZ, initY+(z+1)*edgeIncrement, initX+x*edgeIncrement);
+            point4.setPoint(initZ,initY+z*edgeIncrement,initX+x*edgeIncrement);
+
+            // up facing triangle
+            // lower
+            extra = cross(point3 - point1, point4 - point1);
+            points.push_back(point4);
+            points[points.size() - 1].add2Normal(extra);
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(extra);
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(extra);
+
+            // upper
+            extra = cross(point3 - point1, point3 - point2);
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(extra);
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(extra);
+            points.push_back(point2);
+            points[points.size() - 1].add2Normal(extra);
+
+            // down facing triangle
+            // lower
+            extra = cross(point4 - point1, point3 - point1);
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(extra);
+            points.push_back(point4);
+            points[points.size() - 1].add2Normal(extra);
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(extra);
+
+            // upper
+            extra = cross(point2 - point3, point1 - point3);
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(extra);
+            points.push_back(point2);
+            points[points.size() - 1].add2Normal(extra);
+            points.push_back(point1);
+            points[points.size() - 1].add2Normal(extra);
+
+        }    
+
     }
 
 
-
-    for (int j = 0; j < divisions; j++) {
-        for (int i = 0; i < divisions; i++) {
-            // Left Face
-            point1.setPoint(-initX, initY - (j + 1) * edgeIncrement, initZ - i * edgeIncrement);
-            point2.setPoint(-initX, initY - j * edgeIncrement, initZ - i * edgeIncrement);
-            point3.setPoint(-initX, initY - j * edgeIncrement, initZ - (i + 1) * edgeIncrement);
-            point4.setPoint(-initX, initY - (j + 1) * edgeIncrement, initZ - (i + 1) * edgeIncrement);
-
-               //upper triangle
-            points.push_back(point1);
-            points.push_back(point2);
-            points.push_back(point3);
-
-            extra=cross(point1-point2, point3-point2);
-            executeNormalAlgorithm(point1, extra);
-            executeNormalAlgorithm(point2, extra);
-            executeNormalAlgorithm(point3, extra);
-
-            //lower triangle
-            points.push_back(point4);
-            points.push_back(point1);
-            points.push_back(point3);
-
-            extra=cross(point4-point1, point3-point1);
-            executeNormalAlgorithm(point4, extra);
-            executeNormalAlgorithm(point1, extra);
-            executeNormalAlgorithm(point3, extra);
-
-            // Right Face
-            point5.setPoint(initX, initY - (j + 1) * edgeIncrement, initZ - i * edgeIncrement);
-            point6.setPoint(initX, initY - j * edgeIncrement, initZ - i * edgeIncrement);
-            point7.setPoint(initX, initY - j * edgeIncrement, initZ - (i + 1) * edgeIncrement);
-            point8.setPoint(initX, initY - (j + 1) * edgeIncrement, initZ - (i + 1) * edgeIncrement);
-
-            // Write points to buffer                      
-            //upper triangle
-
-            points.push_back(point5);
-            points.push_back(point6);
-            points.push_back(point7);
-
-            extra=cross(point5-point6, point7-point6);
-            executeNormalAlgorithm(point5, extra);
-            executeNormalAlgorithm(point6, extra);
-            executeNormalAlgorithm(point7, extra);
-            //lower triangle
-            points.push_back(point5);
-            points.push_back(point8);
-            points.push_back(point7);
-
-            extra=cross(point5-point8, point7-point8);
-            executeNormalAlgorithm(point5, extra);
-            executeNormalAlgorithm(point8, extra);
-            executeNormalAlgorithm(point7, extra);
-
-        }
-    }
-
-    for (int j = 0; j < divisions; j++) {
-        for (int i = 0; i < divisions; i++) {
-            // Front Face
-            point1.setPoint(initX - (j + 1) * edgeIncrement, initY - (i + 1) * edgeIncrement, initZ);
-            point2.setPoint(initX - (j + 1) * edgeIncrement, initY - i * edgeIncrement, initZ);
-            point3.setPoint(initX - j * edgeIncrement, initY - i * edgeIncrement, initZ);
-            point4.setPoint(initX - j * edgeIncrement, initY - (i + 1) * edgeIncrement, initZ);
-
-            // Write points to buffer
-
-            points.push_back(point2);
-            points.push_back(point1);
-            points.push_back(point3);
-
-            extra=cross(point2-point1, point3-point1);
-            executeNormalAlgorithm(point2, extra);
-            executeNormalAlgorithm(point1, extra);
-            executeNormalAlgorithm(point3, extra);
-
-            //lower triangle
-            points.push_back(point1);
-            points.push_back(point4);
-            points.push_back(point3);
-
-            extra=cross(point1-point4, point3-point4);
-            executeNormalAlgorithm(point1, extra);
-            executeNormalAlgorithm(point4, extra);
-            executeNormalAlgorithm(point3, extra);
-
-            // Back Face
-            point5.setPoint(initX - (j + 1) * edgeIncrement, initY - (i + 1) * edgeIncrement, -initZ);
-            point6.setPoint(initX - (j + 1) * edgeIncrement, initY - i * edgeIncrement, -initZ);
-            point7.setPoint(initX - j * edgeIncrement, initY - i * edgeIncrement, -initZ);
-            point8.setPoint(initX - j * edgeIncrement, initY - (i + 1) * edgeIncrement, -initZ);
-
-            // Write points to buffer
-            //upper triangle
-            points.push_back(point5);
-            points.push_back(point6);
-            points.push_back(point7);
-
-            extra=cross(point5-point6, point7-point6);
-            executeNormalAlgorithm(point5, extra);
-            executeNormalAlgorithm(point6, extra);
-            executeNormalAlgorithm(point7, extra);
-
-            //lower triangle
-            points.push_back(point8);
-            points.push_back(point5);
-            points.push_back(point7);
-
-            extra=cross(point8-point5, point7-point5);
-            executeNormalAlgorithm(point8, extra);
-            executeNormalAlgorithm(point5, extra);
-            executeNormalAlgorithm(point7, extra);
-
-       }
-    }
     normalizeAllVertices();
     addPoints();
     addNormals();
