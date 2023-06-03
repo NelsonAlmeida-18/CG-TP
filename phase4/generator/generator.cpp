@@ -641,21 +641,35 @@ void generateCone(float radius, float height, int slices, int stacks) {
     point point5;
     point point6;
 
-    for(int i=0; i<slices; i++){
-        point2.setPoint(cos(angleStep*i)*radius, 0, sin(angleStep*i)*radius);
-        point3.setPoint(cos(angleStep*(i+1))*radius, 0, sin(angleStep*(i+1))*radius);
-        
-        points.push_back(point2);
-        points[points.size() - 1].add2Normal(point(0,-1,0));
-        points[points.size()-1].add2Texture(point((sin(angleStep*i),cos(angleStep*i) ,0)));
-        points.push_back(point1);
-        points[points.size() - 1].add2Normal(point(0,-1,0));
-        points[points.size()-1].add2Texture(point((0,0 ,0)));
-        points.push_back(point3);
-        points[points.size() - 1].add2Normal(point(0,-1,0));
-        points[points.size()-1].add2Texture(point((sin(angleStep*(i+1)), cos(angleStep*(i+1)) ,0)));
+    for(int i = 0; i < slices; i++) {
+        point2.setPoint(cos(angleStep * i) * radius, 0, sin(angleStep * i) * radius);
+        point3.setPoint(cos(angleStep * (i + 1)) * radius, 0, sin(angleStep * (i + 1)) * radius);
 
+        // Add points to the vector
+        points.push_back(point2);
+        points[points.size() - 1].add2Normal(point(0, -1, 0));
+        points[points.size() - 1].add2Texture(point(sin(angleStep * i), cos(angleStep * i), 0));
+
+        points.push_back(point1);
+        points[points.size() - 1].add2Normal(point(0, -1, 0));
+        points[points.size() - 1].add2Texture(point(0, 0, 0));
+
+        points.push_back(point3);
+        points[points.size() - 1].add2Normal(point(0, -1, 0));
+        points[points.size() - 1].add2Texture(point(sin(angleStep * (i + 1)), cos(angleStep * (i + 1)), 0));
+
+        
+        points.push_back(point3);
+        points[points.size() - 1].add2Normal(point(0, -1, 0));
+        points[points.size() - 1].add2Texture(point(sin(angleStep * (i + 1)), cos(angleStep * (i + 1)), 0));
+        points.push_back(point1);
+        points[points.size() - 1].add2Normal(point(0, -1, 0));
+        points[points.size() - 1].add2Texture(point(0, 0, 0));
+        points.push_back(point2);
+        points[points.size() - 1].add2Normal(point(0, -1, 0));
+        points[points.size() - 1].add2Texture(point(sin(angleStep * i), cos(angleStep * i), 0));
     }
+
     
 
     float normalY = sin(atan(radius/height));
@@ -717,8 +731,6 @@ void generateSphere(float radius, int slices, int stacks){
     float angleBase = 2*M_PI/slices;
 
     int numOfPoints = (slices+2*stacks*slices)*3;
-
-    buffer << numOfPoints << '\n';
     
     point point1;
     point point2;
@@ -780,63 +792,71 @@ void generateSphere(float radius, int slices, int stacks){
     addTexturePoints();
 }
 
-
-void generateTorus(float outer_r, float inner_r, float ratio, int slices, int stacks){
+void generateTorus(float outer_r, float inner_r, float ratio, int slices, int stacks) {
     printf("Generating Torus");
     float angleFace = (2 * M_PI) / stacks;
     float angleBase = (2 * M_PI) / slices;
-    int numOfPoints = (slices+2*stacks*slices)*3;
-
-    buffer << numOfPoints << '\n';
+    int numOfPoints = (slices + 2 * stacks * slices) * 3;
 
     point point1;
     point point2;
     point point3;
     point point4;
     point extra;
+    point texture1, texture2, texture3, texture4;
 
-     for (int i=0;i<slices;i++){
-        for(int j=0;j<stacks;j++){
-            point1.setPoint((outer_r+inner_r*cos(j*angleFace))*cos(i*angleBase), (outer_r+inner_r*cos(j*angleFace))*sin(i*angleBase), ratio*inner_r*sin(j*angleFace));
-            
-            point2.setPoint((outer_r+inner_r*cos((j+1)*angleFace))*cos(i*angleBase), (outer_r+inner_r*cos((j+1)*angleFace))*sin(i*angleBase), ratio*inner_r*sin((j+1)*angleFace));
-            
-            point3.setPoint((outer_r+inner_r*cos((j+1)*angleFace))*cos((i+1)*angleBase), (outer_r+inner_r*cos((j+1)*angleFace))*sin((i+1)*angleBase), ratio*inner_r*sin((j+1)*angleFace));
-            
-            buffer << point1.pointCoords() << '\n';
-            buffer << point2.pointCoords() << '\n';
-            buffer << point3.pointCoords() << '\n';
+    for (int i = 0; i < slices; i++) {
+        for (int j = 0; j < stacks; j++) {
+            point1.setPoint((outer_r + inner_r * cos(j * angleFace)) * cos(i * angleBase), (outer_r + inner_r * cos(j * angleFace)) * sin(i * angleBase), ratio * inner_r * sin(j * angleFace));
+            point2.setPoint((outer_r + inner_r * cos((j + 1) * angleFace)) * cos(i * angleBase), (outer_r + inner_r * cos((j + 1) * angleFace)) * sin(i * angleBase), ratio * inner_r * sin((j + 1) * angleFace));
+            point3.setPoint((outer_r + inner_r * cos((j + 1) * angleFace)) * cos((i + 1) * angleBase), (outer_r + inner_r * cos((j + 1) * angleFace)) * sin((i + 1) * angleBase), ratio * inner_r * sin((j + 1) * angleFace));
+
+            texture1.setPoint((float)i / slices, (float)j / stacks, 0);
+            texture2.setPoint((float)i / slices, (float)(j + 1) / stacks, 0);
+            texture3.setPoint((float)(i + 1) / slices, (float)(j + 1) / stacks, 0);
 
             points.push_back(point1);
             points.push_back(point2);
             points.push_back(point3);
 
-            extra=cross(point1-point2, point3-point2);
-            executeNormalAlgorithm(point1, extra);
-            executeNormalAlgorithm(point2, extra);
-            executeNormalAlgorithm(point3, extra);
-            
-            point1.setPoint((outer_r+inner_r*cos(j*angleFace))*cos(i*angleBase), (outer_r+inner_r*cos(j*angleFace))*sin(i*angleBase), ratio*inner_r*sin(j*angleFace));
-            
-            point2.setPoint((outer_r+inner_r*cos((j+1)*angleFace))*cos((i+1)*angleBase), (outer_r+inner_r*cos((j+1)*angleFace))*sin((i+1)*angleBase), ratio*inner_r*sin((j+1)*angleFace));
-            
-            point3.setPoint((outer_r+inner_r*cos(j*angleFace))*cos((i+1)*angleBase), (outer_r+inner_r*cos(j*angleFace))*sin((i+1)*angleBase), ratio*inner_r*sin(j*angleFace));
-            
+            extra = cross(point1 - point2, point3 - point2);
+            points[points.size() - 1].add2Texture(extra);
+            points[points.size() - 2].add2Texture(extra);
+            points[points.size() - 3].add2Texture(extra);
+
+            points[points.size() - 1].add2Texture(texture1);
+            points[points.size() - 2].add2Texture(texture2);
+            points[points.size() - 3].add2Texture(texture3);
+
+            point1.setPoint((outer_r + inner_r * cos(j * angleFace)) * cos(i * angleBase), (outer_r + inner_r * cos(j * angleFace)) * sin(i * angleBase), ratio * inner_r * sin(j * angleFace));
+            point2.setPoint((outer_r + inner_r * cos((j + 1) * angleFace)) * cos((i + 1) * angleBase), (outer_r + inner_r * cos((j + 1) * angleFace)) * sin((i + 1) * angleBase), ratio * inner_r * sin((j + 1) * angleFace));
+            point3.setPoint((outer_r + inner_r * cos(j * angleFace)) * cos((i + 1) * angleBase), (outer_r + inner_r * cos(j * angleFace)) * sin((i + 1) * angleBase), ratio * inner_r * sin(j * angleFace));
+
+            texture1.setPoint((float)i / slices, (float)j / stacks, 0);
+            texture2.setPoint((float)(i + 1) / slices, (float)(j + 1) / stacks, 0);
+            texture3.setPoint((float)(i + 1) / slices, (float)j / stacks, 0);
+
             points.push_back(point1);
             points.push_back(point2);
             points.push_back(point3);
 
-            extra=cross(point1-point2, point3-point2);
-            executeNormalAlgorithm(point1, extra);
-            executeNormalAlgorithm(point2, extra);
-            executeNormalAlgorithm(point3, extra);
+            extra = cross(point1 - point2, point3 - point2);
+            points[points.size() - 1].add2Texture(extra);
+            points[points.size() - 2].add2Texture(extra);
+            points[points.size() - 3].add2Texture(extra);
 
+            points[points.size() - 1].add2Texture(texture1);
+            points[points.size() - 2].add2Texture(texture2);
+            points[points.size() - 3].add2Texture(texture3);
         }
     }
+
     normalizeAllVertices();
     addPoints();
     addNormals();
+    addTexturePoints();
 }
+
 
 void tokenize(std::string const &str, const char* delim, std::vector<int> &out){ 
 
@@ -887,11 +907,10 @@ float calculateB(float u, float v, float m[4][4]){
     return result;
 }
 
-
-void generatePatch(const char *file, float tesselation_level){
+void generatePatch(const char* file, float tesselation_level) {
     std::string filename(file);
     std::ifstream patchfile(filename);
-    std::vector<std::vector<int> > patches;
+    std::vector<std::vector<int>> patches;
     int num_of_patches;
     int num_of_points;
     std::vector<point> control_points;
@@ -903,18 +922,17 @@ void generatePatch(const char *file, float tesselation_level){
                      {-3.0f, 3.0f, 0.0f, 0.0f},
                      {1.0f, 0.0f, 0.0f, 0.0f}};
 
-    if(patchfile.is_open()){
+    if (patchfile.is_open()) {
         printf("Generating .3d file for patch\n");
-        int total = tesselation_level*tesselation_level;
+        int total = tesselation_level * tesselation_level;
 
         std::string str;
         getline(patchfile, str);
         num_of_patches = std::atoi(str.c_str());
         const char* delim = ", ";
-        total *= num_of_patches*6;
-        buffer << total << "\n";
+        total *= num_of_patches * 6;
 
-        while(num_of_patches > 0){
+        while (num_of_patches > 0) {
             getline(patchfile, str);
             std::vector<int> temp;
             tokenize(str, delim, temp);
@@ -924,13 +942,13 @@ void generatePatch(const char *file, float tesselation_level){
 
         getline(patchfile, str);
         num_of_points = std::atoi(str.c_str());
-        
-        while(num_of_points > 0){
+
+        while (num_of_points > 0) {
             getline(patchfile, str);
             std::vector<float> temp;
 
-            char *token = strtok(const_cast<char*>(str.c_str()), delim);
-            while(token != nullptr){
+            char* token = strtok(const_cast<char*>(str.c_str()), delim);
+            while (token != nullptr) {
                 temp.push_back(atof(token));
                 token = strtok(nullptr, delim);
             }
@@ -943,18 +961,18 @@ void generatePatch(const char *file, float tesselation_level){
 
         float mx[4][4], my[4][4], mz[4][4];
 
-        for(std::vector<int> indexes : patches){
+        for (std::vector<int> indexes : patches) {
             float temp[4][4];
 
-            for(int i = 0; i < 4; i++){
-                for(int j = 0; j < 4; j++){
-                    mx[i][j] = control_points[indexes[i*4+j]].x;
-                    my[i][j] = control_points[indexes[i*4+j]].y;
-                    mz[i][j] = control_points[indexes[i*4+j]].z;
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < 4; j++) {
+                    mx[i][j] = control_points[indexes[i * 4 + j]].x;
+                    my[i][j] = control_points[indexes[i * 4 + j]].y;
+                    mz[i][j] = control_points[indexes[i * 4 + j]].z;
                 }
             }
 
-            //M * x/y/z * M^T
+            // M * x/y/z * M^T
             multMatrixMatrix(M, mx, temp);
             multMatrixMatrix(temp, M, mx);
 
@@ -965,27 +983,39 @@ void generatePatch(const char *file, float tesselation_level){
             multMatrixMatrix(temp, M, mz);
 
             point p1, p2, p3, p4;
-            float tesselation = 1/tesselation_level;
-            for(float i = 0; i < 1; i += tesselation){
-                for(float j = 0; j < 1; j += tesselation){
+            float tesselation = 1 / tesselation_level;
+            for (float i = 0; i < 1; i += tesselation) {
+                for (float j = 0; j < 1; j += tesselation) {
                     p1.setPoint(calculateB(i, j, mx), calculateB(i, j, my), calculateB(i, j, mz));
-                    
-                    p2.setPoint(calculateB(i+tesselation, j, mx), calculateB(i+tesselation, j, my), calculateB(i+tesselation, j, mz));
 
-                    p3.setPoint(calculateB(i, j+tesselation, mx), calculateB(i, j+tesselation, my), calculateB(i, j+tesselation, mz));
+                    p2.setPoint(calculateB(i + tesselation, j, mx), calculateB(i + tesselation, j, my),
+                                 calculateB(i + tesselation, j, mz));
 
-                    extra=cross(p1-p2, p3-p2);
-                    executeNormalAlgorithm(p1, extra);
-                    executeNormalAlgorithm(p2, extra);
-                    executeNormalAlgorithm(p3, extra);
+                    p3.setPoint(calculateB(i, j + tesselation, mx), calculateB(i, j + tesselation, my),
+                                 calculateB(i, j + tesselation, mz));
+
+                    extra = cross(p1 - p2, p3 - p2);
+                    points.push_back(p1);
+                    points[points.size()-1].add2Normal(extra);
+                    points[points.size()-1].add2Texture(point(i,j,0));
+                    points.push_back(p2);
+                    points[points.size()-1].add2Normal(extra);
+                    points[points.size()-1].add2Texture(point(i+tesselation,j,0));
+                    points.push_back(p3);
+                    points[points.size()-1].add2Normal(extra);
+                    points[points.size()-1].add2Texture(point(i,j+tesselation,0));
+
+
                 }
             }
         }
     }
+
     normalizeAllVertices();
     addPoints();
-    addNormals();
+    addNormals(); 
 }
+
 
 
 int main(int argc, char **argv){
