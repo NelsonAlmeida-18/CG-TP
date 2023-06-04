@@ -111,6 +111,7 @@ void generatePlane(float length, int divisions){
     int numOfTriangs = (divisions*divisions*2)*2;
     int numOfPoints = numOfTriangs*3;
     float textureStep = 1.0f/divisions;
+
     //write number of points 
 
     point point1;
@@ -126,6 +127,7 @@ void generatePlane(float length, int divisions){
             point2.setPoint(initX+(x+1)*edgeIncrement,0,initZ-(z+1)*edgeIncrement);
             point3.setPoint(initX+x*edgeIncrement, 0, initZ-(z+1)*edgeIncrement);
             point4.setPoint(initX+x*edgeIncrement,0,initZ-z*edgeIncrement);
+
             texture1.setPoint((x+1)*textureStep, z*textureStep, 0);
             texture2.setPoint((x+1)*textureStep, (z+1)*textureStep, 0);
             texture3.setPoint(x*textureStep, (z+1)*textureStep, 0);
@@ -205,7 +207,9 @@ void generateBox(float length, int divisions) {
     float initZ = length / 2;
     int numOfTriangs = 6 * divisions * divisions * 2;
     int numOfPoints = numOfTriangs * 3;
+
     float textureStep=1.0f/divisions;
+
     
     //buffer << numOfPoints << '\n';
 
@@ -218,6 +222,7 @@ void generateBox(float length, int divisions) {
     point extra;
     point texture1, texture2, texture3, texture4;
 
+
     //lower face
 
     initX = -length / 2;
@@ -229,6 +234,7 @@ void generateBox(float length, int divisions) {
             point2.setPoint(initX+(x+1)*edgeIncrement,initY,initZ-(z+1)*edgeIncrement);
             point3.setPoint(initX+x*edgeIncrement, initY, initZ-(z+1)*edgeIncrement);
             point4.setPoint(initX+x*edgeIncrement,initY,initZ-z*edgeIncrement);
+          
             texture1.setPoint((x+1)*textureStep, z*textureStep, 0);
             texture2.setPoint((x+1)*textureStep, (z+1)*textureStep, 0);
             texture3.setPoint(x*textureStep, (z+1)*textureStep, 0);
@@ -262,6 +268,7 @@ void generateBox(float length, int divisions) {
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,-1,0));
             points[points.size()-1].add2Texture(texture1);
+          
             // lower facing triangle
             // lower
             extra = cross(point4 - point1, point3 - point1);
@@ -276,7 +283,6 @@ void generateBox(float length, int divisions) {
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,-1,0));
             points[points.size()-1].add2Texture(texture3);
-            
             
             // upper
             extra = cross(point2 - point3, point1 - point3);
@@ -324,6 +330,7 @@ void generateBox(float length, int divisions) {
             points.push_back(point4);
             points[points.size() - 1].add2Normal(point(0,1,0));
             points[points.size()-1].add2Texture(texture4);
+
             // upper
             extra = cross(point1 - point3, point2 - point3);
             points.push_back(point2);
@@ -366,7 +373,6 @@ void generateBox(float length, int divisions) {
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,1,0));
             points[points.size()-1].add2Texture(texture1);
-
         }    
     }
 
@@ -662,7 +668,6 @@ void generateBox(float length, int divisions) {
             points[points.size()-1].add2Texture(texture1);
 
         }    
-
     }
     normalizeAllVertices();
     addPoints();
