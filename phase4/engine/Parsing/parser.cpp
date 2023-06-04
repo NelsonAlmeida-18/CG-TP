@@ -95,11 +95,14 @@ void readSubgroupsXML(tinyxml2::XMLElement *subgroupXML, std::vector<DrawModel> 
                 XMLElement *texture = modelXML->FirstChildElement("texture");
                 if(texture){
                     model.texture_file = texture->Attribute("file");
+                }else{
+                    model.texture_file = "";
                 }
 
                 XMLElement *color = modelXML->FirstChildElement("color");
                 float diffuser, diffuseg, diffuseb, ambientr, ambientg, ambientb, specularr, specularg, specularb, emissiver, emissiveg, emissiveb;
                 if(color){
+                    model.colorFlag = true;
                     diffuser = atof(color->FirstChildElement("diffuse")->Attribute("R"));
                     diffuseg = atof(color->FirstChildElement("diffuse")->Attribute("G"));
                     diffuseb = atof(color->FirstChildElement("diffuse")->Attribute("B"));
@@ -127,6 +130,8 @@ void readSubgroupsXML(tinyxml2::XMLElement *subgroupXML, std::vector<DrawModel> 
                     model.emissive = e;
                     model.specular = spec;
                     model.shininess = shine;
+                }else{
+                    model.colorFlag = false;
                 }
 
                 drawModel.model = model;
@@ -245,11 +250,14 @@ void readGroupXML(tinyxml2::XMLElement *groupXML, std::vector<DrawModel> &sceneD
             XMLElement *texture = modelXML->FirstChildElement("texture");
             if(texture){
                 model.texture_file = texture->Attribute("file");
+            }else{
+                model.texture_file = "";
             }
 
             XMLElement *color = modelXML->FirstChildElement("color");
             float diffuser, diffuseg, diffuseb, ambientr, ambientg, ambientb, specularr, specularg, specularb, emissiver, emissiveg, emissiveb;
             if(color){
+                model.colorFlag = true;
                 diffuser = atof(color->FirstChildElement("diffuse")->Attribute("R"));
                 diffuseg = atof(color->FirstChildElement("diffuse")->Attribute("G"));
                 diffuseb = atof(color->FirstChildElement("diffuse")->Attribute("B"));
@@ -277,6 +285,8 @@ void readGroupXML(tinyxml2::XMLElement *groupXML, std::vector<DrawModel> &sceneD
                 model.emissive = e;
                 model.specular = spec;
                 model.shininess = shine;
+            }else{
+                model.colorFlag = false;
             }
 
             drawModel.transformations = transf;

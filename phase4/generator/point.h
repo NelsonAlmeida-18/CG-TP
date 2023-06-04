@@ -10,6 +10,9 @@ class point{
         float xN=0;
         float yN=0;
         float zN=0;
+        float xT=0;
+        float yT=0;
+        float zT=0;
 
         point(float x = 0, float y = 0, float z = 0) : x(x), y(y), z(z) {}
 
@@ -45,8 +48,12 @@ class point{
             return "vn " + to_string(xN) + " " + to_string(yN) +" " + to_string(zN) + "\n";
         }
 
+        string textureCoords(){
+            return "vt " + to_string(xT) + " " + to_string(yT) + "\n";
+        }
+
         void normalize(){
-            float size = sqrt(pow(x,2)+pow(y,2)+pow(z,2));
+            float size = sqrt(pow(xN,2)+pow(yN,2)+pow(zN,2));
             xN=xN/size;
             yN=yN/size;
             zN=zN/size;
@@ -54,6 +61,12 @@ class point{
 
         point divideNormal(float size){
             return point(xN/size, yN/size, zN/size);
+        }
+
+        void add2Texture(point a){
+            xT = a.x;
+            yT = a.y;
+            zT = a.z;
         }
 
         void add2Normal(point a){
