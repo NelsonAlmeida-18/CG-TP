@@ -693,34 +693,38 @@ void generateCone(float radius, float height, int slices, int stacks) {
     point point4;
     point point5;
     point point6;
+    point tex1, tex2, tex3, tex4, tex5, tex6;
 
     for(int i = 0; i < slices; i++) {
         point2.setPoint(cos(angleStep * i) * radius, 0, sin(angleStep * i) * radius);
         point3.setPoint(cos(angleStep * (i + 1)) * radius, 0, sin(angleStep * (i + 1)) * radius);
+        tex1.setPoint(0, 0, 0);
+        tex2.setPoint(sin(angleStep * i), cos(angleStep * i), 0),
+        tex3.setPoint(sin(angleStep * (i + 1)), cos(angleStep * (i + 1)), 0);
 
         // Add points to the vector
         points.push_back(point2);
         points[points.size() - 1].add2Normal(point(0, -1, 0));
-        points[points.size() - 1].add2Texture(point(sin(angleStep * i), cos(angleStep * i), 0));
+        points[points.size() - 1].add2Texture(tex2);
 
         points.push_back(point1);
         points[points.size() - 1].add2Normal(point(0, -1, 0));
-        points[points.size() - 1].add2Texture(point(0, 0, 0));
+        points[points.size() - 1].add2Texture(tex1);
 
         points.push_back(point3);
         points[points.size() - 1].add2Normal(point(0, -1, 0));
-        points[points.size() - 1].add2Texture(point(sin(angleStep * (i + 1)), cos(angleStep * (i + 1)), 0));
+        points[points.size() - 1].add2Texture(tex3);
 
         
         points.push_back(point3);
         points[points.size() - 1].add2Normal(point(0, -1, 0));
-        points[points.size() - 1].add2Texture(point(sin(angleStep * (i + 1)), cos(angleStep * (i + 1)), 0));
+        points[points.size() - 1].add2Texture(tex3);
         points.push_back(point1);
         points[points.size() - 1].add2Normal(point(0, -1, 0));
-        points[points.size() - 1].add2Texture(point(0, 0, 0));
+        points[points.size() - 1].add2Texture(tex1);
         points.push_back(point2);
         points[points.size() - 1].add2Normal(point(0, -1, 0));
-        points[points.size() - 1].add2Texture(point(sin(angleStep * i), cos(angleStep * i), 0));
+        points[points.size() - 1].add2Texture(tex2);
     }
 
     
@@ -737,36 +741,42 @@ void generateCone(float radius, float height, int slices, int stacks) {
             r2 = h2 / rat;
 
             point1.setPoint(r1*sin(angleStep*j), i*heightStep, r1*cos(angleStep*j));
+            tex1.setPoint(j/slices, i/stacks ,0);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(sin(angleStep*j),normalY,cos(angleStep*j)));
-            points[points.size()-1].add2Texture(point((j/slices, i/stacks ,0)));
+            points[points.size()-1].add2Texture(tex1);
 
             point2.setPoint(r1*sin(angleStep*(j+1)), i*heightStep, r1*cos(angleStep*(j+1)));
+            tex2.setPoint((j+1)/slices, i/stacks ,0);
             points.push_back(point2);
             points[points.size() - 1].add2Normal(point(sin(angleStep*(j+1)),normalY,cos(angleStep*(j+1))));
-            points[points.size()-1].add2Texture(point(((j+1)/slices, i/stacks ,0)));
+            points[points.size()-1].add2Texture(tex2);
 
             point3.setPoint(r2 * sin(angleStep * j),(i+1) * heightStep, r2 * cos(angleStep * j));
             points.push_back(point3);
+            tex3.setPoint(j/slices, (i+1)/stacks ,0);
             points[points.size() - 1].add2Normal(point(sin(angleStep*j),normalY,cos(angleStep*j)));
-            points[points.size()-1].add2Texture(point((j/slices, (i+1)/stacks ,0)));
+            points[points.size()-1].add2Texture(tex3);
 
 
             if (i != stacks - 1) {
                 point4.setPoint( r2 * sin(angleStep * j),(i+1) * heightStep, r2 * cos(angleStep * j));
                 points.push_back(point4);
+                tex4.setPoint(j/slices, (i+1)/stacks ,0);
                 points[points.size() - 1].add2Normal(point(sin(angleStep*j),normalY,cos(angleStep*j)));
-                points[points.size()-1].add2Texture(point((j/slices, (i+1)/stacks ,0)));
+                points[points.size()-1].add2Texture(tex4);
 
                 point5.setPoint(r1*sin(angleStep * (j+1)), i*heightStep, r1*cos(angleStep*(j+1)));
                 points.push_back(point5);
+                tex5.setPoint((j+1)/slices, i/stacks ,0);
                 points[points.size() - 1].add2Normal(point(sin(angleStep*(j+1)),normalY,cos(angleStep*(j+1))));
-                points[points.size()-1].add2Texture(point(((j+1)/slices, i/stacks ,0)));
+                points[points.size()-1].add2Texture(tex5);
 
                 point6.setPoint(r2 * sin(angleStep * (j+1)),(i+1) * heightStep,r2 * cos(angleStep * (j+1)));
                 points.push_back(point6);
+                tex6.setPoint((j+1)*slices, (i+1)/stacks ,0);
                 points[points.size() - 1].add2Normal(point(sin(angleStep*(j+1)),normalY,cos(angleStep*(j+1))));
-                points[points.size()-1].add2Texture(point(((j+1)*slices, (i+1)/stacks ,0)));
+                points[points.size()-1].add2Texture(tex6);
 
             }            
 
@@ -776,7 +786,9 @@ void generateCone(float radius, float height, int slices, int stacks) {
     normalizeAllVertices();
     addPoints();
     addNormals();
+    addTexturePoints();
 }
+
 
 void generateSphere(float radius, int slices, int stacks){
     printf("Generating Sphere");
