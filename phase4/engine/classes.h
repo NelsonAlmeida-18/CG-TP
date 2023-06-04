@@ -184,6 +184,7 @@ struct Model{
     std::string texture_file;
     std::string model_file;
     float mass;
+    bool colorFlag;
 };
 
 

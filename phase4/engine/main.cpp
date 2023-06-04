@@ -1,3 +1,4 @@
+#include <IL/il.h>
 #ifdef __APPLE__
 #include <GLUT/glut.h>
 #else
@@ -19,7 +20,7 @@
 #include <cmath>
 
 
-GLuint *vertexBuffer, *normalBuffer;
+GLuint *vertexBuffer, *normalBuffer, *textureBuffer;
 
 Scene scene;
 std::vector<DrawModel> drawModelVector;
@@ -34,6 +35,7 @@ float lastMouseX, lastMouseY;
 float cameraAngleX = 0;
 float cameraAngleY = 0;
 float cameraDistance = 5;
+bool renderAxis = true;
 
 
 void changeSize(int w, int h) {
@@ -138,6 +140,8 @@ void processNormalKeys(unsigned char key, int x, int y){
 
 	if(key == 99 || key == 67){
 		renderCurve = !renderCurve;
+    }else if(key == 69 || key == 101){
+        renderAxis = !renderAxis;
 	}else{
         cameraMotion(key);
     }
@@ -206,6 +210,45 @@ void processSpecialKeys(int key, int xx, int yy){
 }
 
 
+GLuint loadTexture(std::string filename){
+    GLuint texID;
+    unsigned char *texData;
+    unsigned int t, tw, th;
+    std::string file_path = "../../textures/" + filename;
+
+    ilInit();
+
+    //coloca a origem da textura no canto inferior esquerdo do primeiro quadrante
+    ilEnable(IL_ORIGIN_SET);
+    ilOriginFunc(IL_ORIGIN_LOWER_LEFT);
+
+    //Coloca a textura na memória
+    ilGenImages(1, &t);
+    ilBindImage(t);
+    ilLoadImage((ILstring)file_path.c_str());
+    tw = ilGetInteger(IL_IMAGE_WIDTH);
+    th = ilGetInteger(IL_IMAGE_HEIGHT);
+
+    //Assegura que está em RGBA
+    ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
+    texData = ilGetData();
+
+    glGenTextures(1, &texID);
+    glBindTexture(GL_TEXTURE_2D, texID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tw, th, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    return texID;
+}
+
+
 void tokenize(std::string const &str, const char* delim, std::vector<float> &out){ 
 
     char *token = strtok(const_cast<char*>(str.c_str()), delim); 
@@ -223,10 +266,11 @@ int drawFigure(Model model, int buffer){
 
     const char* delim = " ";
     if (file3d.is_open()){
-               getline(file3d,str);
+               //getline(file3d,str);
 
         std::vector<float> vectorBuffer;
         std::vector<float> normals;
+        std::vector<float> textures;
         int flag=0;
         int pos=0;
         while(getline(file3d, str)){
@@ -251,6 +295,10 @@ int drawFigure(Model model, int buffer){
                 pos+=3;
                 flag=1;
             }
+            if(std::strcmp(line[0], "vt") == 0){
+                textures.push_back(atof(line[1]));
+                textures.push_back(atof(line[2]));
+            }
             else if (std::strcmp(line[0],"v")!=0 && std::strcmp(line[0],"vn")!=0 && flag==1) {
                 break;
             }
@@ -261,10 +309,13 @@ int drawFigure(Model model, int buffer){
         file3d.close();
 
         glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer[buffer]);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float)*vectorBuffer.size()*3,vectorBuffer.data(),GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(vectorBuffer.size()-1),vectorBuffer.data(),GL_STATIC_DRAW);
         
         glBindBuffer(GL_ARRAY_BUFFER, normalBuffer[buffer]);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float)*normals.size()*3, normals.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(normals.size()-1), normals.data(), GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ARRAY_BUFFER, textureBuffer[buffer]);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(vectorBuffer.size()-1), textures.data(), GL_STATIC_DRAW);
     
         return (int)vectorBuffer.size();
     }
@@ -290,25 +341,28 @@ std::vector<int> drawModels(){
 
 
 void drawAxis(){
+    if(renderAxis){
+        glDisable(GL_LIGHTING);
+        glBegin(GL_LINES);
 
-    glBegin(GL_LINES);
+        float windowWidth = glutGet(GLUT_WINDOW_WIDTH)/2;
+        float windowHeight = glutGet(GLUT_WINDOW_HEIGHT)/2;
 
-    float windowWidth = glutGet(GLUT_WINDOW_WIDTH)/2;
-    float windowHeight = glutGet(GLUT_WINDOW_HEIGHT)/2;
+        glColor3f(1,0,0); //x axis - red
+        glVertex3f(windowWidth, 0, 0);
+        glVertex3f(-windowWidth, 0, 0);
 
-    glColor3f(1,0,0); //x axis - red
-    glVertex3f(windowWidth, 0, 0);
-    glVertex3f(-windowWidth, 0, 0);
+        glColor3f(0, 1, 0); // y axis - green
+        glVertex3f(0, windowHeight, 0);
+        glVertex3f(0, -windowHeight, 0);
 
-    glColor3f(0, 1, 0); // y axis - green
-    glVertex3f(0, windowHeight, 0);
-    glVertex3f(0, -windowHeight, 0);
+        glColor3f(0, 0, 1); //z axis - blue
+        glVertex3f(0, 0, windowWidth);
+        glVertex3f(0, 0, -windowWidth);
 
-    glColor3f(0, 0, 1); //z axis - blue
-    glVertex3f(0, 0, windowWidth);
-    glVertex3f(0, 0, -windowWidth);
-
-    glEnd();
+        glEnd();
+        glEnable(GL_LIGHTING);
+    }
 }
 
 
@@ -332,8 +386,8 @@ void renderScene(){
 
     numVertices = drawModels();
 
-    float amb[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, amb);
+    //float amb[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	//glLightModelfv(GL_LIGHT_MODEL_AMBIENT, amb);
 
     for(Light *l : scene.lights){
         l->execute();
@@ -341,26 +395,37 @@ void renderScene(){
 
     for(int i=0; i<scene.drawModels.size(); i++){
         glPushMatrix();
-
-        scene.drawModels[i].model.diffuse->execute();
-        scene.drawModels[i].model.specular->execute();
-        scene.drawModels[i].model.ambient->execute();
-        scene.drawModels[i].model.emissive->execute();
-        scene.drawModels[i].model.shininess->execute();
                 
         for(Transform *t : scene.drawModels[i].transformations){
             t->execute();
         }
 
-        glBindBuffer(GL_ARRAY_BUFFER,vertexBuffer[i]);
+        if(scene.drawModels[i].model.colorFlag){
+            scene.drawModels[i].model.diffuse->execute();
+            scene.drawModels[i].model.specular->execute();
+            scene.drawModels[i].model.ambient->execute();
+            scene.drawModels[i].model.emissive->execute();
+            scene.drawModels[i].model.shininess->execute();
+        }
+
+        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer[i]);
         glVertexPointer(3,GL_FLOAT, 0,0);
         
         glBindBuffer(GL_ARRAY_BUFFER, normalBuffer[i]);
         glNormalPointer(GL_FLOAT,0,0);
 
+        if(scene.drawModels[i].model.texture_file.compare("") != 0){
+            GLuint texID = loadTexture(scene.drawModels[i].model.texture_file);
+            if(texID != -1){
+                glBindTexture(GL_TEXTURE_2D, texID);
+                glBindBuffer(GL_ARRAY_BUFFER, textureBuffer[i]);
+                glTexCoordPointer(2, GL_FLOAT, 0, 0);
+            }
+        }
+
         glDrawArrays(GL_TRIANGLES,0, numVertices[i]);
 
-
+        glBindTexture(GL_TEXTURE_2D, 0);
         glPopMatrix();
     }
 
@@ -382,15 +447,14 @@ void renderScene(){
 
 
 void initLights(){
-    float light_amb[4] = {1.0, 0.0, 0.0, 1.0};
-    float light_dif[4] = {1.0, 1.0, 1.0, 1.0};
-    float light_spe[4] = {0.0, 0.0 , 0.0, 1.0};
+    float dark[4] = {0.3, 0.3, 0.3, 1.0};
+    float white[4] = {1.0, 1.0, 1.0, 1.0};
 
     for(Light *l : scene.lights){
         glEnable(l->getIndex());
-        glLightfv(l->getIndex(), GL_AMBIENT, light_amb);
-        glLightfv(l->getIndex(), GL_DIFFUSE, light_dif);
-        glLightfv(l->getIndex(), GL_SPECULAR, light_spe);
+        glLightfv(l->getIndex(), GL_AMBIENT, dark);
+        glLightfv(l->getIndex(), GL_DIFFUSE, white);
+        glLightfv(l->getIndex(), GL_SPECULAR, white);
     }
 }
 
@@ -406,6 +470,7 @@ int main(int argc, char **argv){
         //generate buffers
         vertexBuffer = (GLuint*)malloc(sizeof(GLuint)*scene.drawModels.size());
         normalBuffer = (GLuint*)malloc(sizeof(GLuint)*scene.drawModels.size());
+        textureBuffer = (GLuint*)malloc(sizeof(GLuint)*scene.drawModels.size());
     }else{
         return 1;
     }
@@ -416,7 +481,9 @@ int main(int argc, char **argv){
     glutInitWindowPosition(0, 0);
     glutInitWindowSize(800, 800);
     glutCreateWindow("Project");
+
     glEnable(GL_LIGHTING);
+    initLights();
 
     //Required callback registry
     glutDisplayFunc(renderScene);
@@ -429,9 +496,8 @@ int main(int argc, char **argv){
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_RESCALE_NORMAL);
+    glEnable(GL_TEXTURE_2D);
     //glCullFace(GL_BACK);
-
-    initLights();
 
     #ifndef __APPLE__
         glewInit();
@@ -439,8 +505,10 @@ int main(int argc, char **argv){
 
     glEnableClientState(GL_VERTEX_ARRAY); // para aceitar os arrays de vértices para a otimização
     glEnableClientState(GL_NORMAL_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glGenBuffers(scene.drawModels.size(), normalBuffer);
     glGenBuffers(scene.drawModels.size(), vertexBuffer);
+    glGenBuffers(scene.drawModels.size(), textureBuffer);
 
     time_passed = glutGet(GLUT_ELAPSED_TIME);
 

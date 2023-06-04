@@ -52,7 +52,18 @@ void addTexturePoints(){
 }
 
 point cross(point a, point b){
-    return point(a.y-b.z*a.z*b.y,a.z*b.x-a.x*b.z,a.x*b.y-a.y*b.x);
+    return point(a.y-b.z*a.z*b.y,
+                a.z*b.x-a.x*b.z,
+                a.x*b.y-a.y*b.x);
+}
+
+point crossProduct(point a, point b){
+    point r;
+    r.setPoint(a.y*b.z - a.z*b.y,
+               a.z*b.x - a.x*b.z,
+               a.x*b.y - a.y*b.x);
+
+    return r;
 }
 
 std::vector<int> findPoint(point a){
@@ -75,6 +86,12 @@ void normalizeAllVertices() {
             points[i].zN /= sum;
         }
 
+        float sum2 = sqrt(pow(points[i].xT, 2) + pow(points[i].yT, 2) + pow(points[i].zT, 2));
+        if(sum2!=0){
+            points[i].xT /= sum2;
+            points[i].yT /= sum2;
+            points[i].zT /= sum2;
+        }
     }
 }
 
@@ -93,7 +110,8 @@ void generatePlane(float length, int divisions){
     //number of triangles = divisions*divisions* trianglesPerSquare(2)* numberOfFaces(2)
     int numOfTriangs = (divisions*divisions*2)*2;
     int numOfPoints = numOfTriangs*3;
-    float textureStep = 1/divisions;
+    float textureStep = 1.0f/divisions;
+
     //write number of points 
 
     point point1;
@@ -101,6 +119,7 @@ void generatePlane(float length, int divisions){
     point point3;
     point point4;
     point extra;
+    point texture1, texture2, texture3, texture4;
 
     for (int x=0;x<divisions;x++){
         for (int z=0;z<divisions;z++){
@@ -109,61 +128,67 @@ void generatePlane(float length, int divisions){
             point3.setPoint(initX+x*edgeIncrement, 0, initZ-(z+1)*edgeIncrement);
             point4.setPoint(initX+x*edgeIncrement,0,initZ-z*edgeIncrement);
 
+            texture1.setPoint((x+1)*textureStep, z*textureStep, 0);
+            texture2.setPoint((x+1)*textureStep, (z+1)*textureStep, 0);
+            texture3.setPoint(x*textureStep, (z+1)*textureStep, 0);
+            texture4.setPoint(x*textureStep, z*textureStep, 0);
+            
+
             // upper facing triangle
             // lower
             extra = cross(point3 - point1, point4 - point1);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(extra);
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
             points.push_back(point3);
             points[points.size() - 1].add2Normal(extra);
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
             
             points.push_back(point4);
             points[points.size() - 1].add2Normal(extra);
-            points[points.size()-1].add2Texture(point(x*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture4);
 
             // upper
             extra = cross(point1 - point3, point2 - point3);
             points.push_back(point2);
             points[points.size() - 1].add2Normal(extra);
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture2);
 
             points.push_back(point3);
             points[points.size() - 1].add2Normal(extra);
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
             points.push_back(point1);
             points[points.size() - 1].add2Normal(extra);
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
             // lower facing triangle
             // lower
             extra = cross(point4 - point1, point3 - point1);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(extra);
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
             points.push_back(point4);
             points[points.size() - 1].add2Normal(extra);
-            points[points.size()-1].add2Texture(point(x*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture4);
             points.push_back(point3);
             points[points.size() - 1].add2Normal(extra);
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
             // upper
             extra = cross(point2 - point3, point1 - point3);
             points.push_back(point3);
             points[points.size() - 1].add2Normal(extra);
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
             points.push_back(point2);
             points[points.size() - 1].add2Normal(extra);
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture2);
 
             points.push_back(point1);
             points[points.size() - 1].add2Normal(extra);
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
         }    
     }
@@ -182,7 +207,9 @@ void generateBox(float length, int divisions) {
     float initZ = length / 2;
     int numOfTriangs = 6 * divisions * divisions * 2;
     int numOfPoints = numOfTriangs * 3;
-    float textureStep=1/divisions;
+
+    float textureStep=1.0f/divisions;
+
     
     //buffer << numOfPoints << '\n';
 
@@ -193,6 +220,8 @@ void generateBox(float length, int divisions) {
     point point3;
     point point4;
     point extra;
+    point texture1, texture2, texture3, texture4;
+
 
     //lower face
 
@@ -205,64 +234,69 @@ void generateBox(float length, int divisions) {
             point2.setPoint(initX+(x+1)*edgeIncrement,initY,initZ-(z+1)*edgeIncrement);
             point3.setPoint(initX+x*edgeIncrement, initY, initZ-(z+1)*edgeIncrement);
             point4.setPoint(initX+x*edgeIncrement,initY,initZ-z*edgeIncrement);
+          
+            texture1.setPoint((x+1)*textureStep, z*textureStep, 0);
+            texture2.setPoint((x+1)*textureStep, (z+1)*textureStep, 0);
+            texture3.setPoint(x*textureStep, (z+1)*textureStep, 0);
+            texture4.setPoint(x*textureStep, z*textureStep, 0);
 
             // upper facing triangle
             // lower
             extra = cross(point3 - point1, point4 - point1);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,-1,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,-1,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
             points.push_back(point4);
             points[points.size() - 1].add2Normal(point(0,-1,0));
-            points[points.size()-1].add2Texture(point((x*textureStep,z*textureStep ,0)));
+            points[points.size()-1].add2Texture(texture4);
 
             // upper
             extra = cross(point1 - point3, point2 - point3);
             points.push_back(point2);
             points[points.size() - 1].add2Normal(point(0,-1,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture2);
 
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,-1,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,-1,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
+          
             // lower facing triangle
             // lower
             extra = cross(point4 - point1, point3 - point1);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,-1,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
             points.push_back(point4);
             points[points.size() - 1].add2Normal(point(0,-1,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture4);
 
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,-1,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
-            
+            points[points.size()-1].add2Texture(texture3);
             
             // upper
             extra = cross(point2 - point3, point1 - point3);
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,-1,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
             points.push_back(point2);
             points[points.size() - 1].add2Normal(point(0,-1,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture2);
 
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,-1,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
         }    
     }
 
@@ -277,64 +311,68 @@ void generateBox(float length, int divisions) {
             point2.setPoint(initX+(x+1)*edgeIncrement,initY,initZ-(z+1)*edgeIncrement);
             point3.setPoint(initX+x*edgeIncrement, initY, initZ-(z+1)*edgeIncrement);
             point4.setPoint(initX+x*edgeIncrement,initY,initZ-z*edgeIncrement);
+            texture1.setPoint((x+1)*textureStep, z*textureStep, 0);
+            texture2.setPoint((x+1)*textureStep, (z+1)*textureStep, 0);
+            texture3.setPoint(x*textureStep, (z+1)*textureStep, 0);
+            texture4.setPoint(x*textureStep, z*textureStep, 0);
 
             // upper facing triangle
             // lower
             extra = cross(point3 - point1, point4 - point1);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,1,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,1,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
             points.push_back(point4);
             points[points.size() - 1].add2Normal(point(0,1,0));
-            points[points.size()-1].add2Texture(point((x*textureStep,z*textureStep ,0)));
+            points[points.size()-1].add2Texture(texture4);
+
             // upper
             extra = cross(point1 - point3, point2 - point3);
             points.push_back(point2);
             points[points.size() - 1].add2Normal(point(0,1,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture2);
 
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,1,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,1,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
             // lower facing triangle
             // lower
             extra = cross(point4 - point1, point3 - point1);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,1,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
             points.push_back(point4);
             points[points.size() - 1].add2Normal(point(0,1,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture4);
 
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,1,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
             // upper
             extra = cross(point2 - point3, point1 - point3);
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,1,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
             points.push_back(point2);
             points[points.size() - 1].add2Normal(point(0,1,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture2);
 
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,1,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
-
+            points[points.size()-1].add2Texture(texture1);
         }    
     }
 
@@ -349,62 +387,66 @@ void generateBox(float length, int divisions) {
             point2.setPoint(initX+(x+1)*edgeIncrement,initY+(z+1)*edgeIncrement, initZ);
             point3.setPoint(initX+x*edgeIncrement, initY+(z+1)*edgeIncrement, initZ);
             point4.setPoint(initX+x*edgeIncrement,initY+z*edgeIncrement,initZ);
+            texture1.setPoint((x+1)*textureStep, z*textureStep, 0);
+            texture2.setPoint((x+1)*textureStep, (z+1)*textureStep, 0);
+            texture3.setPoint(x*textureStep, (z+1)*textureStep, 0);
+            texture4.setPoint(x*textureStep, z*textureStep, 0);
 
             // upper facing triangle
             // lower
             extra = cross(point3 - point1, point4 - point1);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,0,1));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,0,1));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
             points.push_back(point4);
             points[points.size() - 1].add2Normal(point(0,0,1));
-            points[points.size()-1].add2Texture(point((x*textureStep,z*textureStep ,0)));
+            points[points.size()-1].add2Texture(texture4);
 
             // upper
             extra = cross(point3 - point1, point3 - point2);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,0,1));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,0,1));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
             points.push_back(point2);
             points[points.size() - 1].add2Normal(point(0,0,1));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture2);
 
             // lower facing triangle
             // lower
             extra = cross(point4 - point1, point3 - point1);
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,0,1));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
             points.push_back(point4);
             points[points.size() - 1].add2Normal(point(0,0,1));
-            points[points.size()-1].add2Texture(point((x*textureStep,z*textureStep ,0)));
+            points[points.size()-1].add2Texture(texture4);
 
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,0,1));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
             // upper
             extra = cross(point2 - point3, point1 - point3);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,0,1));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
             points.push_back(point2);
             points[points.size() - 1].add2Normal(point(0,0,1));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture2);
 
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,0,1));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
         }    
     }
@@ -420,64 +462,68 @@ void generateBox(float length, int divisions) {
             point2.setPoint(initX+(x+1)*edgeIncrement,initY+(z+1)*edgeIncrement, initZ);
             point3.setPoint(initX+x*edgeIncrement, initY+(z+1)*edgeIncrement, initZ);
             point4.setPoint(initX+x*edgeIncrement,initY+z*edgeIncrement,initZ);
+            texture1.setPoint((x+1)*textureStep, z*textureStep, 0);
+            texture2.setPoint((x+1)*textureStep, (z+1)*textureStep, 0);
+            texture3.setPoint(x*textureStep, (z+1)*textureStep, 0);
+            texture4.setPoint(x*textureStep, z*textureStep, 0);
 
             // up facing triangle
             // lower
             extra = cross(point4 - point1, point3 - point1);
             points.push_back(point4);
             points[points.size() - 1].add2Normal(point(0,0,-1));
-            points[points.size()-1].add2Texture(point((x*textureStep,z*textureStep ,0)));
+            points[points.size()-1].add2Texture(texture4);
 
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,0,-1));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,0,-1));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
             // upper
             extra = cross(point3 - point1, point3 - point2);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,0,-1));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,0,-1));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
             points.push_back(point2);
             points[points.size() - 1].add2Normal(point(0,0,-1));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture2);
 
             // down facing triangle
             // lower
             extra = cross(point4 - point1, point3 - point1);
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,0,-1));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
             points.push_back(point4);
             points[points.size() - 1].add2Normal(point(0,0,-1));
-            points[points.size()-1].add2Texture(point((x*textureStep,z*textureStep ,0)));
+            points[points.size()-1].add2Texture(texture4);
 
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,0,-1));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
             // upper
             extra = cross(point2 - point3, point1 - point3);
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(0,0,-1));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
             points.push_back(point2);
             points[points.size() - 1].add2Normal(point(0,0,-1));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture2);
 
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(0,0,-1));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
         }    
 
@@ -494,56 +540,60 @@ void generateBox(float length, int divisions) {
             point2.setPoint(initZ,initY+(z+1)*edgeIncrement, initX+(x+1)*edgeIncrement);
             point3.setPoint(initZ, initY+(z+1)*edgeIncrement, initX+x*edgeIncrement);
             point4.setPoint(initZ,initY+z*edgeIncrement,initX+x*edgeIncrement);
+            texture1.setPoint((x+1)*textureStep, z*textureStep, 0);
+            texture2.setPoint((x+1)*textureStep, (z+1)*textureStep, 0);
+            texture3.setPoint(x*textureStep, (z+1)*textureStep, 0);
+            texture4.setPoint(x*textureStep, z*textureStep, 0);
 
             // up facing triangle
             // lower
             extra = cross(point3 - point1, point4 - point1);
             points.push_back(point4);
             points[points.size() - 1].add2Normal(point(1,0,0));
-            points[points.size()-1].add2Texture(point((x*textureStep,z*textureStep ,0)));
+            points[points.size()-1].add2Texture(texture4);
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(1,0,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(1,0,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
             // upper
             extra = cross(point3 - point1, point3 - point2);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(1,0,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(1,0,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
             points.push_back(point2);
             points[points.size() - 1].add2Normal(point(1,0,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture2);
 
             // down facing triangle
             // lower
             extra = cross(point4 - point1, point3 - point1);
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(1,0,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
             points.push_back(point4);
             points[points.size() - 1].add2Normal(point(1,0,0));
-            points[points.size()-1].add2Texture(point((x*textureStep,z*textureStep ,0)));
+            points[points.size()-1].add2Texture(texture4);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(1,0,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
             // upper
             extra = cross(point2 - point3, point1 - point3);
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(1,0,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
             points.push_back(point2);
             points[points.size() - 1].add2Normal(point(1,0,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture2);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(1,0,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
         }    
 
@@ -560,61 +610,64 @@ void generateBox(float length, int divisions) {
             point2.setPoint(initZ,initY+(z+1)*edgeIncrement, initX+(x+1)*edgeIncrement);
             point3.setPoint(initZ, initY+(z+1)*edgeIncrement, initX+x*edgeIncrement);
             point4.setPoint(initZ,initY+z*edgeIncrement,initX+x*edgeIncrement);
+            texture1.setPoint((x+1)*textureStep, z*textureStep, 0);
+            texture2.setPoint((x+1)*textureStep, (z+1)*textureStep, 0);
+            texture3.setPoint(x*textureStep, (z+1)*textureStep, 0);
+            texture4.setPoint(x*textureStep, z*textureStep, 0);
 
             // up facing triangle
             // lower
             extra = cross(point3 - point1, point4 - point1);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(-1,0,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(-1,0,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
             points.push_back(point4);
             points[points.size() - 1].add2Normal(point(-1,0,0));
-            points[points.size()-1].add2Texture(point((x*textureStep,z*textureStep ,0)));
+            points[points.size()-1].add2Texture(texture4);
 
             // upper
             extra = cross(point3 - point1, point3 - point2);
             points.push_back(point2);
             points[points.size() - 1].add2Normal(point(-1,0,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture2);
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(-1,0,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(-1,0,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
             // down facing triangle
             // lower
             extra = cross(point4 - point1, point3 - point1);
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(-1,0,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
             points.push_back(point4);
             points[points.size() - 1].add2Normal(point(-1,0,0));
-            points[points.size()-1].add2Texture(point((x*textureStep,z*textureStep ,0)));
+            points[points.size()-1].add2Texture(texture4);
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(-1,0,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
             // upper
             extra = cross(point2 - point3, point1 - point3);
             points.push_back(point3);
             points[points.size() - 1].add2Normal(point(-1,0,0));
-            points[points.size()-1].add2Texture(point(x*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture3);
 
             points.push_back(point2);
             points[points.size() - 1].add2Normal(point(-1,0,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,(z+1)*textureStep ,0));
+            points[points.size()-1].add2Texture(texture2);
 
             points.push_back(point1);
             points[points.size() - 1].add2Normal(point(-1,0,0));
-            points[points.size()-1].add2Texture(point((x+1)*textureStep,z*textureStep ,0));
+            points[points.size()-1].add2Texture(texture1);
 
         }    
-
     }
     normalizeAllVertices();
     addPoints();
@@ -641,21 +694,35 @@ void generateCone(float radius, float height, int slices, int stacks) {
     point point5;
     point point6;
 
-    for(int i=0; i<slices; i++){
-        point2.setPoint(cos(angleStep*i)*radius, 0, sin(angleStep*i)*radius);
-        point3.setPoint(cos(angleStep*(i+1))*radius, 0, sin(angleStep*(i+1))*radius);
-        
-        points.push_back(point2);
-        points[points.size() - 1].add2Normal(point(0,-1,0));
-        points[points.size()-1].add2Texture(point((sin(angleStep*i),cos(angleStep*i) ,0)));
-        points.push_back(point1);
-        points[points.size() - 1].add2Normal(point(0,-1,0));
-        points[points.size()-1].add2Texture(point((0,0 ,0)));
-        points.push_back(point3);
-        points[points.size() - 1].add2Normal(point(0,-1,0));
-        points[points.size()-1].add2Texture(point((sin(angleStep*(i+1)), cos(angleStep*(i+1)) ,0)));
+    for(int i = 0; i < slices; i++) {
+        point2.setPoint(cos(angleStep * i) * radius, 0, sin(angleStep * i) * radius);
+        point3.setPoint(cos(angleStep * (i + 1)) * radius, 0, sin(angleStep * (i + 1)) * radius);
 
+        // Add points to the vector
+        points.push_back(point2);
+        points[points.size() - 1].add2Normal(point(0, -1, 0));
+        points[points.size() - 1].add2Texture(point(sin(angleStep * i), cos(angleStep * i), 0));
+
+        points.push_back(point1);
+        points[points.size() - 1].add2Normal(point(0, -1, 0));
+        points[points.size() - 1].add2Texture(point(0, 0, 0));
+
+        points.push_back(point3);
+        points[points.size() - 1].add2Normal(point(0, -1, 0));
+        points[points.size() - 1].add2Texture(point(sin(angleStep * (i + 1)), cos(angleStep * (i + 1)), 0));
+
+        
+        points.push_back(point3);
+        points[points.size() - 1].add2Normal(point(0, -1, 0));
+        points[points.size() - 1].add2Texture(point(sin(angleStep * (i + 1)), cos(angleStep * (i + 1)), 0));
+        points.push_back(point1);
+        points[points.size() - 1].add2Normal(point(0, -1, 0));
+        points[points.size() - 1].add2Texture(point(0, 0, 0));
+        points.push_back(point2);
+        points[points.size() - 1].add2Normal(point(0, -1, 0));
+        points[points.size() - 1].add2Texture(point(sin(angleStep * i), cos(angleStep * i), 0));
     }
+
     
 
     float normalY = sin(atan(radius/height));
@@ -781,61 +848,83 @@ void generateSphere(float radius, int slices, int stacks){
 }
 
 
-void generateTorus(float outer_r, float inner_r, float ratio, int slices, int stacks){
+void generateTorus(float outerRadius, float innerRadius, float ratio, int slices, int stacks) {
     printf("Generating Torus");
-    float angleFace = (2 * M_PI) / stacks;
-    float angleBase = (2 * M_PI) / slices;
-    int numOfPoints = (slices+2*stacks*slices)*3;
+    float angleOuter = 2 * M_PI / slices;
+    float angleInner = 2 * M_PI / stacks;
+
+    int numOfPoints = slices * stacks * 3;
 
     buffer << numOfPoints << '\n';
 
-    point point1;
-    point point2;
-    point point3;
-    point point4;
-    point extra;
+    point point1, point2, point3, point4;
+    point normal1, normal2, normal3, normal4;
+    point texture1, texture2, texture3, texture4;
 
-     for (int i=0;i<slices;i++){
-        for(int j=0;j<stacks;j++){
-            point1.setPoint((outer_r+inner_r*cos(j*angleFace))*cos(i*angleBase), (outer_r+inner_r*cos(j*angleFace))*sin(i*angleBase), ratio*inner_r*sin(j*angleFace));
-            
-            point2.setPoint((outer_r+inner_r*cos((j+1)*angleFace))*cos(i*angleBase), (outer_r+inner_r*cos((j+1)*angleFace))*sin(i*angleBase), ratio*inner_r*sin((j+1)*angleFace));
-            
-            point3.setPoint((outer_r+inner_r*cos((j+1)*angleFace))*cos((i+1)*angleBase), (outer_r+inner_r*cos((j+1)*angleFace))*sin((i+1)*angleBase), ratio*inner_r*sin((j+1)*angleFace));
-            
-            buffer << point1.pointCoords() << '\n';
-            buffer << point2.pointCoords() << '\n';
-            buffer << point3.pointCoords() << '\n';
+    for (int i = 0; i < slices; i++) {
+        for (int j = 0; j < stacks; j++) {
+            float u = (float)i / slices;
+            float v = (float)j / stacks;
+
+            point1.setPoint((outerRadius + innerRadius * cos(angleOuter * i)) * cos(angleInner * j),
+                            (outerRadius + innerRadius * cos(angleOuter * i)) * sin(angleInner * j),
+                            innerRadius * sin(angleOuter * i));
+            point2.setPoint((outerRadius + innerRadius * cos(angleOuter * (i + 1))) * cos(angleInner * j),
+                            (outerRadius + innerRadius * cos(angleOuter * (i + 1))) * sin(angleInner * j),
+                            innerRadius * sin(angleOuter * (i + 1)));
+            point3.setPoint((outerRadius + innerRadius * cos(angleOuter * (i + 1))) * cos(angleInner * (j + 1)),
+                            (outerRadius + innerRadius * cos(angleOuter * (i + 1))) * sin(angleInner * (j + 1)),
+                            innerRadius * sin(angleOuter * (i + 1)));
+            point4.setPoint((outerRadius + innerRadius * cos(angleOuter * i)) * cos(angleInner * (j + 1)),
+                            (outerRadius + innerRadius * cos(angleOuter * i)) * sin(angleInner * (j + 1)),
+                            innerRadius * sin(angleOuter * i));
+            normal1.setPoint(cos(angleOuter * i) * cos(angleInner * j),
+                             cos(angleOuter * i) * sin(angleInner * j),
+                             sin(angleOuter * i));
+            normal2.setPoint(cos(angleOuter * (i + 1)) * cos(angleInner * j),
+                             cos(angleOuter * (i + 1)) * sin(angleInner * j),
+                             sin(angleOuter * (i + 1)));
+            normal3.setPoint(cos(angleOuter * (i + 1)) * cos(angleInner * (j + 1)),
+                             cos(angleOuter * (i + 1)) * sin(angleInner * (j + 1)),
+                             sin(angleOuter * (i + 1)));
+            normal4.setPoint(cos(angleOuter * i) * cos(angleInner * (j + 1)),
+                             cos(angleOuter * i) * sin(angleInner * (j + 1)),
+                             sin(angleOuter * i));
+            texture1.setPoint(u, v, 0);
+            texture2.setPoint(u + ratio / slices, v, 0);
+            texture3.setPoint(u + ratio / slices, v + 1.0f / stacks, 0);
+            texture4.setPoint(u, v + 1.0f / stacks, 0);
 
             points.push_back(point1);
-            points.push_back(point2);
-            points.push_back(point3);
+            points[points.size() - 1].add2Normal(normal1);
+            points[points.size() - 1].add2Texture(texture1);
 
-            extra=cross(point1-point2, point3-point2);
-            executeNormalAlgorithm(point1, extra);
-            executeNormalAlgorithm(point2, extra);
-            executeNormalAlgorithm(point3, extra);
-            
-            point1.setPoint((outer_r+inner_r*cos(j*angleFace))*cos(i*angleBase), (outer_r+inner_r*cos(j*angleFace))*sin(i*angleBase), ratio*inner_r*sin(j*angleFace));
-            
-            point2.setPoint((outer_r+inner_r*cos((j+1)*angleFace))*cos((i+1)*angleBase), (outer_r+inner_r*cos((j+1)*angleFace))*sin((i+1)*angleBase), ratio*inner_r*sin((j+1)*angleFace));
-            
-            point3.setPoint((outer_r+inner_r*cos(j*angleFace))*cos((i+1)*angleBase), (outer_r+inner_r*cos(j*angleFace))*sin((i+1)*angleBase), ratio*inner_r*sin(j*angleFace));
-            
+            points.push_back(point2);
+            points[points.size() - 1].add2Normal(normal2);
+            points[points.size() - 1].add2Texture(texture2);
+
+            points.push_back(point3);
+            points[points.size() - 1].add2Normal(normal3);
+            points[points.size() - 1].add2Texture(texture3);
+
             points.push_back(point1);
-            points.push_back(point2);
+            points[points.size() - 1].add2Normal(normal1);
+            points[points.size() - 1].add2Texture(texture1);
+
             points.push_back(point3);
+            points[points.size() - 1].add2Normal(normal3);
+            points[points.size() - 1].add2Texture(texture3);
 
-            extra=cross(point1-point2, point3-point2);
-            executeNormalAlgorithm(point1, extra);
-            executeNormalAlgorithm(point2, extra);
-            executeNormalAlgorithm(point3, extra);
-
+            points.push_back(point4);
+            points[points.size() - 1].add2Normal(normal4);
+            points[points.size() - 1].add2Texture(texture4);
         }
     }
+
     normalizeAllVertices();
     addPoints();
     addNormals();
+    addTexturePoints();
 }
 
 void tokenize(std::string const &str, const char* delim, std::vector<int> &out){ 
@@ -873,18 +962,51 @@ void multMatrixVector(float *m, float *v, float *res) {
 
 float calculateB(float u, float v, float m[4][4]){
 
-    float V[4] = {powf(v, 3), powf(v, 2), v, 1};
-    float U[4] = {powf(u, 3), powf(u, 2), u, 1};
+    float aux[4];
+    float V[4] = {powf(v,3), powf(v,2), v, 1};
+    float r;
 
-    float temp[4];
-    multMatrixVector((float *) m, U, temp);
-    
-    float result = 0;
-    for(int i = 0; i < 4; i++){
-        result += temp[i]*V[i];
-    }
+    multMatrixVector((float *)m,V,aux);
 
-    return result;
+    r = powf(u,3)*aux[0] + powf(u,2)*aux[1] + u*aux[2] + aux[3];
+    return r;
+}
+
+
+float calculateNu(float U, float V, float m[4][4]){
+
+    float aux[4];
+    float v[4];
+    float r;
+
+    v[0] = powf(V,3);
+    v[1] = powf(V,2);
+    v[2] = V;
+    v[3] = 1;
+
+    multMatrixVector((float *)m,v,aux);
+
+    r = 3*powf(U,2)*aux[0] + 2*U*aux[1] + aux[2];
+
+    return r;
+}
+
+float calculateNv(float U, float V, float m[4][4]){
+
+    float aux[4];
+    float v[4];
+    float r;
+
+    v[0] = 3*powf(V,2);
+    v[1] = V*2;
+    v[2] = 1;
+    v[3] = 0;
+
+    multMatrixVector((float *)m,v,aux);
+
+    r = powf(U,3)*aux[0] + powf(U,2)*aux[1] + U*aux[2] + aux[3];
+
+    return r;
 }
 
 
@@ -965,19 +1087,56 @@ void generatePatch(const char *file, float tesselation_level){
             multMatrixMatrix(temp, M, mz);
 
             point p1, p2, p3, p4;
-            float tesselation = 1/tesselation_level;
+            point nu1, nu2, nu3, nu4, nv1, nv2, nv3, nv4;
+            point normal1, normal2, normal3, normal4;
+            point tex1, tex2, tex3, tex4;
+            float tesselation = 1.0f/tesselation_level;
             for(float i = 0; i < 1; i += tesselation){
                 for(float j = 0; j < 1; j += tesselation){
                     p1.setPoint(calculateB(i, j, mx), calculateB(i, j, my), calculateB(i, j, mz));
-                    
                     p2.setPoint(calculateB(i+tesselation, j, mx), calculateB(i+tesselation, j, my), calculateB(i+tesselation, j, mz));
+                    p3.setPoint(calculateB(i+tesselation, j+tesselation, mx), calculateB(i+tesselation, j+tesselation, my), calculateB(i+tesselation, j+tesselation, mz));
+                    p4.setPoint(calculateB(i, j+tesselation, mx), calculateB(i, j+tesselation, my), calculateB(i, j+tesselation, mz));
 
-                    p3.setPoint(calculateB(i, j+tesselation, mx), calculateB(i, j+tesselation, my), calculateB(i, j+tesselation, mz));
+                    nu1.setPoint(calculateNu(i, j, mx), calculateNu(i, j, my), calculateNu(i, j, mz));
+                    nu2.setPoint(calculateNu(i+tesselation, j, mx), calculateNu(i+tesselation, j, my), calculateNu(i+tesselation, j, mz));
+                    nu3.setPoint(calculateNu(i+tesselation, j+tesselation, mx), calculateNu(i+tesselation, j+tesselation, my), calculateNu(i+tesselation, j+tesselation, mz));
+                    nu4.setPoint(calculateNu(i, j+tesselation, mx), calculateNu(i, j+tesselation, my), calculateNu(i, j+tesselation, mz));
 
-                    extra=cross(p1-p2, p3-p2);
-                    executeNormalAlgorithm(p1, extra);
-                    executeNormalAlgorithm(p2, extra);
-                    executeNormalAlgorithm(p3, extra);
+                    nv1.setPoint(calculateNv(i, j, mx), calculateNv(i, j, my), calculateNv(i, j, mz));
+                    nv2.setPoint(calculateNv(i+tesselation, j, mx), calculateNv(i+tesselation, j, my), calculateNv(i+tesselation, j, mz));
+                    nv3.setPoint(calculateNv(i+tesselation, j+tesselation, mx), calculateNv(i+tesselation, j+tesselation, my), calculateNv(i+tesselation, j+tesselation, mz));
+                    nv4.setPoint(calculateNv(i, j+tesselation, mx), calculateNv(i, j+tesselation, my), calculateNv(i, j+tesselation, mz));
+
+                    normal1 = crossProduct(nu1, nv1);
+                    normal2 = crossProduct(nu2, nv2);
+                    normal3 = crossProduct(nu3, nv3);
+                    normal4 = crossProduct(nu4, nv4);
+
+                    tex1.setPoint(j, i, 0);
+                    tex2.setPoint(j, i+tesselation, 0);
+                    tex3.setPoint(j+tesselation, i+tesselation, 0);
+                    tex4.setPoint(j+tesselation, i, 0);
+
+                    points.push_back(p1);
+                    points[points.size() - 1].add2Normal(normal1);
+                    points[points.size() - 1].add2Texture(tex1);
+                    points.push_back(p2);
+                    points[points.size() - 1].add2Normal(normal2);
+                    points[points.size() - 1].add2Texture(tex2);
+                    points.push_back(p3);
+                    points[points.size() - 1].add2Normal(normal3);
+                    points[points.size() - 1].add2Texture(tex3);
+
+                    points.push_back(p3);
+                    points[points.size() - 1].add2Normal(normal3);
+                    points[points.size() - 1].add2Texture(tex3);
+                    points.push_back(p4);
+                    points[points.size() - 1].add2Normal(normal4);
+                    points[points.size() - 1].add2Texture(tex4);
+                    points.push_back(p1);
+                    points[points.size() - 1].add2Normal(normal1);
+                    points[points.size() - 1].add2Texture(tex1);
                 }
             }
         }
